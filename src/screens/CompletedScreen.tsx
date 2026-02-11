@@ -7,7 +7,8 @@ interface DecodedRoutine {
   id: string;
   name: string;
   exercises: any[];
-  startTime?: number; 
+  startTime?: number;
+  duration?: number; // ✅ NUEVO: Duración real calculada desde ExerciseScreen
 }
 
 const CompletedScreen: React.FC = () => {
@@ -18,9 +19,9 @@ const CompletedScreen: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [routineData, setRoutineData] = useState<DecodedRoutine | null>(null);
   const [duration, setDuration] = useState(0);
-  
+
   // ✅ NUEVO: Estado para saber si estamos guardando en la nube
-  const [isSaving, setIsSaving] = useState(false); 
+  const [isSaving, setIsSaving] = useState(false);
 
   const painEmojis = ['😊', '🙂', '😐', '😕', '😟', '😣', '😖', '😫', '😭', '😱'];
   const painLabels = ['Sin dolor', 'Muy leve', 'Leve', 'Molesto', 'Incómodo', 'Moderado', 'Fuerte', 'Muy fuerte', 'Intenso', 'Insoportable'];
@@ -28,11 +29,25 @@ const CompletedScreen: React.FC = () => {
   useEffect(() => {
     try {
       if (id) {
-        const decodedData = atob(id);
+        // ✅ FIX: Decodificación segura y robusta
+        let decodedData = '';
+        try {
+          // Intentamos decodificar asumiendo que viene con encodeURIComponent (La forma segura)
+          decodedData = decodeURIComponent(atob(id));
+        } catch (e) {
+          // Si falla, es porque venía codificado de la forma antigua (solo btoa)
+          decodedData = atob(id);
+        }
+        
         const data: DecodedRoutine = JSON.parse(decodedData);
         setRoutineData(data);
 
-        if (data.startTime) {
+        // Si la pantalla anterior ya calculó la duración (como acabamos de programar), la usamos
+        if ((data as any).duration) {
+          setDuration((data as any).duration);
+        } 
+        // Fallbacks de cálculo por si acaso
+        else if (data.startTime) {
           const elapsed = Math.floor((Date.now() - data.startTime) / 1000);
           setDuration(elapsed);
         } else {
@@ -43,7 +58,8 @@ const CompletedScreen: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Error decoding routine data:', error);
+      console.error('❌ Error fatal al decodificar la rutina:', error);
+      // Solo en caso de error masivo te mandará al Home
       navigate('/home');
     }
   }, [id, navigate]);

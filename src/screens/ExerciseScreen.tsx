@@ -254,13 +254,22 @@ const ExerciseScreen: React.FC = () => {
     const endTime = Date.now();
     const duration = Math.floor((endTime - routineData.startTime) / 1000);
     
-    navigate('/completed', {
-      state: {
-        routineName: routineData.name,
-        duration: duration,
-        exercises: exercises.length
-      }
-    });
+    // Preparar los mismos datos completos para la pantalla de finalización
+    const finalData = {
+      ...routineData,
+      duration: duration // Añadimos la duración real calculada
+    };
+
+    try {
+      // Codificación segura con encodeURIComponent para evitar problemas con tildes y caracteres especiales
+      const encodedData = btoa(encodeURIComponent(JSON.stringify(finalData)));
+      navigate(`/completed/${encodedData}`);
+    } catch (error) {
+      console.error('❌ Error al codificar datos para CompletedScreen:', error);
+      // Fallback por si acaso
+      const fallbackEncoded = btoa(JSON.stringify(finalData));
+      navigate(`/completed/${fallbackEncoded}`);
+    }
   };
 
   const getProgressText = () => {
