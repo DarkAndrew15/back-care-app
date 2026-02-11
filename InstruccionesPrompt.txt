@@ -1,0 +1,280 @@
+RoutineDetailScreen.tsx (Versión Final)
+typescript
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+const RoutineDetailScreen: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const startTime = Date.now();
+
+  const routine = {
+    id: 'morning-routine',
+    title: 'Los "3 Grandes" de McGill',
+    subtitle: 'Tu medicina diaria - Protocolo Fase 1',
+    duration: '10 min',
+    description: 'Ejercicios fundamentales para estabilizar tu columna sin movimiento dañino. Realízalos todos los días antes de empezar tu jornada.',
+    // ✅ CORREGIDO: .jpg → .png
+    image: '/images/anime/NarutoMeditando.png',
+    exercises: [
+      {
+        id: 'curl-up',
+        name: 'Curl-Up Modificado',
+        target: 'Core Anterior (Recto Abdominal)',
+        sets: 3,
+        reps: 5,
+        hold: '10s',
+        repsOrDuration: '5 reps × 10s',
+        description: 'Fortalece el recto abdominal sin flexionar la columna vertebral',
+        // ✅ CORREGIDO: .jpg → .png
+        image: '/images/anime/GokuBannerEjercicioPiso.png',
+        avatar: '/images/anime/ChibiNarutoSaludando.png',
+        instructions: [
+          'Túmbate boca arriba con una pierna estirada y otra doblada (esto bloquea la pelvis)',
+          'Coloca tus manos debajo de zona lumbar para mantener el arco natural',
+          'Levanta solo la cabeza y los hombros unos centímetros del suelo',
+          'Aguanta 10 segundos manteniendo la tensión en el abdomen',
+          'Baja controladamente y descansa 3-5 segundos entre repeticiones'
+        ],
+        warnings: [
+          'NO aplastes la espalda contra el suelo',
+          'El movimiento debe ser mínimo (pocos centímetros) para proteger tu espalda',
+          'Mantén siempre el arco lumbar natural con las manos'
+        ],
+        tips: [
+          'Imagina que estás endureciendo el abdomen para recibir un golpe',
+          'La barbilla debe ir ligeramente hacia el pecho',
+          'Respira normalmente durante el aguante'
+        ],
+        why: 'Crea una "faja" frontal protectora sin doblar la columna. Activa el músculo recto abdominal sin movimiento dañino, proporcionando estabilidad anterior a tu espalda baja.',
+        rest: 'Descansa 3-5 segundos entre cada repetición. Descansa 30-45 segundos entre series.'
+      },
+      {
+        id: 'side-plank',
+        name: 'Puente Lateral (Side Plank)',
+        target: 'Oblicuos y Cuadrado Lumbar',
+        sets: 3,
+        reps: 'Por cada lado',
+        hold: '10s',
+        repsOrDuration: '10s × cada lado',
+        description: 'Fortalece el cuadrado lumbar para estabilizar la zona de dolor pulsátil',
+        // ✅ CORREGIDO: .jpg → .png
+        image: '/images/anime/GokuBustoAnimo.png',
+        avatar: '/images/anime/GokuChibiBannerSerio.png',
+        instructions: [
+          'Túmbate de lado apoyado en el codo y las rodillas (versión fácil para Fase 1)',
+          'Levanta la cadera para que tu cuerpo forme una línea recta',
+          'Coloca el brazo libre sobre el hombro contrario',
+          'Aguanta 10 segundos manteniendo la estabilidad sin balancearte',
+          'Baja controladamente, cambia de lado y repite'
+        ],
+        warnings: [
+          'Mantén el cuerpo en línea recta para evitar compensaciones',
+          'NO dejes caer la cadera hacia el suelo',
+          'Si es muy difícil, mantén las rodillas apoyadas todo el tiempo'
+        ],
+        tips: [
+          'Imagina que te empujan desde arriba y resistes',
+          'Contrae el abdomen y glúteos para mayor estabilidad',
+          'Mira hacia adelante, no hacia abajo'
+        ],
+        why: 'Este ejercicio fortalece el Cuadrado Lumbar, el músculo principal que estabiliza tu zona de dolor (encima de la pelvis) y evita que las vértebras se deslicen. Es VITAL para tu dolor pulsátil ya que previene el movimiento lateral no deseado.',
+        rest: 'Descansa 5 segundos entre cada lado. Descansa 30-45 segundos entre series.'
+      },
+      {
+        id: 'bird-dog',
+        name: 'Pájaro-Perro (Bird-Dog)',
+        target: 'Cadena Posterior y Multífidos',
+        sets: 3,
+        reps: 5,
+        hold: '8-10s',
+        repsOrDuration: '5 reps × 8-10s por lado',
+        description: 'Activa músculos profundos de la columna sin carga compresiva',
+        // ✅ CORREGIDO: .jpg → .png
+        image: '/images/anime/NarutoMeditando.png',
+        avatar: '/images/anime/ChibiNarutoDurmiendo.png',
+        instructions: [
+          'Colócate en cuatro patas en posición de cuadrupedia (manos bajo hombros, rodillas bajo caderas)',
+          'Estira una pierna hacia atrás y el brazo contrario hacia adelante simultáneamente',
+          '¡IMPORTANTE! Busca LONGITUD, no altura. Imagina tocar la pared de enfrente y la de atrás',
+          'Mantén la espalda como una mesa completamente inmóvil (sin arquear ni rotar)',
+          'Cierra el puño del brazo extendido fuertemente para activar más músculos',
+          'Aguanta 8-10 segundos y regresa controladamente',
+          'Cambia de lado (pierna contraria y brazo contrario)'
+        ],
+        warnings: [
+          'NO arquees la espalda buscando altura del brazo o pierna',
+          'Mantén la columna neutral como una tabla en todo momento',
+          'El movimiento debe ser lento y extremadamente controlado',
+          'NO permitas rotación de caderas o hombros'
+        ],
+        tips: [
+          'Imagina balancear un vaso de agua en tu espalda baja sin derramarlo',
+          'El movimiento debe sentirse como estiramiento, no como elevación',
+          'Respira normalmente, no aguantes la respiración'
+        ],
+        why: 'Activa los multífidos (músculos profundos de la columna vertebral) sin poner carga compresiva peligrosa. Enseña a tu espalda a mantenerse estable mientras tus extremidades se mueven, exactamente lo que necesitas hacer en el trabajo de bodega cargando cajas.',
+        rest: 'Descansa 3-5 segundos entre cada lado. Descansa 45-60 segundos entre series.'
+      }
+    ]
+  };
+
+  const totalExercises = routine.exercises.length;
+
+  return (
+    <div className="h-full min-h-screen flex flex-col bg-background-light dark:bg-background-dark">
+      {/* Header con imagen hero */}
+      <div className="relative h-64 w-full overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${routine.image})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background-light dark:from-background-dark via-transparent to-transparent" />
+        
+        {/* Back button */}
+        <button 
+          onClick={() => navigate('/home')}
+          className="absolute top-6 left-6 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg hover:scale-105 transition-transform"
+        >
+          <span className="material-symbols-outlined text-purple-dark dark:text-purple-light">arrow_back</span>
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 px-6 pt-4 pb-24">
+        {/* Título y descripción */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-extrabold text-text-main dark:text-white font-display mb-1">
+            {routine.title}
+          </h1>
+          <p className="text-base font-medium text-purple-dark dark:text-purple-light mb-3 font-display">
+            {routine.subtitle}
+          </p>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-primary text-xl">schedule</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 font-display">{routine.duration}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-primary text-xl">fitness_center</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 font-display">{totalExercises} ejercicios</span>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-display">
+            {routine.description}
+          </p>
+        </div>
+
+        {/* Advertencia importante */}
+        <div className="mb-6 p-4 rounded-2xl bg-accent-yellow dark:bg-yellow-900/10 border-2 border-[#FFEBB0] dark:border-yellow-800/30">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-yellow-700 dark:text-yellow-500 text-2xl shrink-0">warning</span>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 font-display">Importante - Fase 1</h3>
+              <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed font-display">
+                Durante las primeras 4 semanas, <strong>NUNCA</strong> busques altura o rango máximo. Busca <strong>control y estabilidad</strong>. Si sientes dolor agudo, detente inmediatamente.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Lista de ejercicios */}
+        <div className="space-y-3 mb-6">
+          <h2 className="text-lg font-bold text-text-main dark:text-white mb-3 font-display">Ejercicios incluidos</h2>
+          {routine.exercises.map((exercise, index) => (
+            <div 
+              key={exercise.id}
+              className="group flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#1f1a28] border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
+            >
+              {/* Avatar/Image */}
+              <div className="relative shrink-0">
+                <div className="w-14 h-14 rounded-xl overflow-hidden bg-purple-light/30 dark:bg-purple-dark/20">
+                  {exercise.avatar && (
+                    <img 
+                      src={exercise.avatar} 
+                      alt={exercise.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center shadow-md">
+                  {index + 1}
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-text-main dark:text-white mb-0.5 font-display">
+                  {exercise.name}
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-display">
+                  {exercise.target}
+                </p>
+                <div className="flex items-center gap-3 text-xs font-semibold">
+                  <span className="text-primary">{exercise.sets} series</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-purple-dark dark:text-purple-light">{exercise.repsOrDuration}</span>
+                </div>
+              </div>
+
+              {/* Icon */}
+              <span className="material-symbols-outlined text-gray-300 dark:text-gray-600 group-hover:text-primary transition-colors">
+                chevron_right
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA Button fijo */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light/95 dark:via-background-dark/95 to-transparent">
+        <div className="max-w-[375px] mx-auto">
+          <button
+            onClick={() => {
+              // ✅ MEJORA 1: Validar que exercises no esté vacío
+              if (!routine.exercises || routine.exercises.length === 0) {
+                console.error('No hay ejercicios en la rutina');
+                return;
+              }
+
+              // ✅ MEJORA 2: Estructura optimizada compatible con ExerciseScreen
+              const exerciseData = {
+                id: routine.id,
+                name: routine.title,
+                exercises: routine.exercises,
+                currentExerciseIndex: 0,
+                currentSet: 1,
+                startTime
+              };
+
+              // ✅ MEJORA 3: Try-catch para manejar errores de codificación
+              try {
+                const encodedData = btoa(encodeURIComponent(JSON.stringify(exerciseData)));
+                
+                console.log('✅ Navegando a ejercicio con datos codificados:', {
+                  routineId: routine.id,
+                  routineTitle: routine.title,
+                  totalExercises: routine.exercises.length,
+                  encodedLength: encodedData.length
+                });
+
+                navigate(`/exercise/${encodedData}`);
+              } catch (error) {
+                console.error('❌ Error al codificar datos de rutina:', error);
+                // Fallback: intentar sin encodeURIComponent (por si hay caracteres problemáticos)
+                const encodedData = btoa(JSON.stringify(exerciseData));
+                navigate(`/exercise/${encodedData}`);
+              }
+            }}
+            className="w-full py-4 px-6 rounded-full bg-mint-gradient text-white font-bold text-lg shadow-glow hover:shadow-float hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-2 font-display"
+          >
+            <span>Estoy listo, comenzar</span>
+            <span className="material-symbols-outlined">play_arrow</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RoutineDetailScreen;
