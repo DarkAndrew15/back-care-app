@@ -25,7 +25,7 @@ const RestScreen: React.FC = () => {
     try {
       if (id) {
         const decodedData = atob(id);
-        const data: DecodedRoutine = JSON.parse(decodedData);
+        const data: DecodedRoutine = JSON.parse(decodeURIComponent(decodedData));
         setRoutineData(data);
         setTimeLeft(data.restType === 'between-sets' ? 30 : 60);
       }
@@ -108,7 +108,7 @@ const RestScreen: React.FC = () => {
                 </span>
               </div>
             </div>
-            <button onClick={() => navigate('/routine/morning')} className="size-9 flex items-center justify-center rounded-full bg-white shadow-soft text-gray-500 hover:text-primary hover:scale-105 transition-all border border-white">
+            <button onClick={() => navigate(`/routine/${routineData?.id || 'morning'}`)} className="size-9 flex items-center justify-center rounded-full bg-white shadow-soft text-gray-500 hover:text-primary hover:scale-105 transition-all border border-white">
               <span className="material-symbols-outlined text-[20px]">close</span>
             </button>
           </div>

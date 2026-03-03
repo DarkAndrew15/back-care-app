@@ -40,7 +40,8 @@ const ExerciseScreen: React.FC = () => {
   // ✅ 2. Estado para pantalla de descanso
   const [isResting, setIsResting] = useState(false);
   const [restTime, setRestTime] = useState(30);
-  const restTotalTime = 30;
+  const [restTotalTime, setRestTotalTime] = useState(30);
+  const [pendingNextExercise, setPendingNextExercise] = useState(false);
 
   const [routineData, setRoutineData] = useState<RoutineData | null>(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
@@ -161,14 +162,19 @@ const ExerciseScreen: React.FC = () => {
   const startRest = (duration: number) => {
     setIsResting(true);
     setRestTime(duration);
+    setRestTotalTime(duration);
     setIsActive(true); // Auto-iniciar el descanso
   };
 
   // ✅ Función para terminar descanso
   const finishRest = () => {
     setIsResting(false);
-    setIsActive(false); // Pausar para que el usuario dé play
-    setTimeLeft(totalTime); // Reset timer del ejercicio
+    setIsActive(false);
+    setTimeLeft(totalTime);
+    if (pendingNextExercise) {
+      moveToNextExercise();
+      setPendingNextExercise(false);
+    }
   };
 
   const handleNext = () => {
@@ -189,6 +195,7 @@ const ExerciseScreen: React.FC = () => {
           // Ejercicio completo, descanso entre ejercicios (45s)
           if (currentExerciseIndex < exercises.length - 1) {
             startRest(45);
+            setPendingNextExercise(true);
             moveToNextExercise();
           } else {
             handleComplete();
@@ -212,6 +219,7 @@ const ExerciseScreen: React.FC = () => {
           // Ejercicio completo, descanso entre ejercicios (60s)
           if (currentExerciseIndex < exercises.length - 1) {
             startRest(60);
+            setPendingNextExercise(true);
             moveToNextExercise();
           } else {
             handleComplete();
@@ -234,6 +242,7 @@ const ExerciseScreen: React.FC = () => {
           // Ejercicio completo, descanso entre ejercicios (45s)
           if (currentExerciseIndex < exercises.length - 1) {
             startRest(45);
+            setPendingNextExercise(true);
             moveToNextExercise();
           } else {
             handleComplete();
@@ -438,8 +447,8 @@ const ExerciseScreen: React.FC = () => {
         {/* BOTONES INFERIORES */}
         <div className="absolute bottom-0 w-full px-6 pb-8 pt-16 bg-gradient-to-t from-background-light via-background-light/95 to-transparent z-10 flex flex-col items-center pointer-events-none">
           <div className="flex items-center justify-between w-full max-w-[280px] pointer-events-auto">
-            <button 
-              onClick={handleNext}
+            <button
+              onClick={isResting ? finishRest : handleNext}
               className="flex flex-col items-center justify-center gap-1 group"
             >
               <div className="size-11 rounded-full bg-white shadow-soft flex items-center justify-center text-gray-500 group-hover:text-primary group-hover:scale-110 transition-all border border-white">

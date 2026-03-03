@@ -174,3 +174,11 @@ Durante la última sesión de desarrollo, se realizaron los siguientes cambios i
 15. **Actualización de imágenes en todas las pantallas**: Se actualizaron las imágenes de personajes animados en varias pantallas (`CompletedScreen.tsx`, `HomeScreen.tsx`, `OnboardingScreen.tsx`, `ProfileScreen.tsx`, `ProgressScreen.tsx`) para usar personajes de anime como Goku y Naruto en lugar de imágenes anteriores.
 
 16. **Mejora de la UX con personajes animados**: Se incorporaron personajes animados de anime en múltiples pantallas para mejorar la experiencia del usuario y hacer la aplicación más atractiva visualmente.
+
+17. **Ajuste de cálculo de rachas y fechas locales**: `storage.ts` ahora calcula las rachas con la fecha local (YYYY-MM-DD) evitando conversiones UTC erróneas y corrige el almacenamiento de la última sesión.
+
+18. **Mejoras en HomeScreen y ProgressScreen**: Se añadieron cálculos de porcentaje dinámico, escuchadores `focus/storage` para mantener datos actualizados y un calendario mensual con estados `checked`, `today` y leyendas multicolor.
+
+19. **Temas de navegación y estilos**: `BottomNavigation` soporta `NavTheme.Mint` además de púrpura, con animaciones de fondo y texto activos/inactivos.
+
+20. **Modal de confirmación y control de estado**: Se implementó un modal personalizado de salida en `ExerciseScreen.tsx` (`showExitModal`) para reemplazar `window.confirm` y mejorar la experiencia durante un entrenamiento.
