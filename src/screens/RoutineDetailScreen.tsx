@@ -17,10 +17,10 @@ const RoutineDetailScreen: React.FC = () => {
   // Si alguien ingresa un ID inválido, mostramos un error elegante
   if (!routine) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FFFDF7] p-6 text-center">
-        <span className="material-symbols-outlined text-gray-400 text-6xl mb-4">error</span>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Rutina no encontrada</h2>
-        <p className="text-gray-500 mb-8">Parece que esta rutina no existe o ha sido movida.</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FFFDF7] dark:bg-slate-900 p-6 text-center">
+        <span className="material-symbols-outlined text-gray-400 dark:text-gray-500 text-6xl mb-4">error</span>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Rutina no encontrada</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-8">Parece que esta rutina no existe o ha sido movida.</p>
         <button
           onClick={() => navigate('/home')}
           className="bg-[#1CD6A8] text-white px-8 py-3 rounded-full font-bold shadow-lg"
@@ -35,28 +35,28 @@ const RoutineDetailScreen: React.FC = () => {
 
   return (
     // Estructura principal
-    <div className="flex flex-col min-h-screen bg-[#FFFDF7] text-gray-800 font-sans">
-      
+    <div className="flex flex-col min-h-screen bg-[#FFFDF7] dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans transition-colors duration-300">
+
       {/* HEADER STICKY */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-[#FFFDF7]/90 backdrop-blur-md">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-[#FFFDF7]/90 dark:bg-slate-900/90 backdrop-blur-md">
         <button
           onClick={() => navigate('/home')}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 active:scale-95 transition-transform"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition-transform"
         >
-          <span className="material-symbols-outlined text-gray-700 text-xl">arrow_back</span>
+          <span className="material-symbols-outlined text-gray-700 dark:text-gray-300 text-xl">arrow_back</span>
         </button>
 
         <div className="flex flex-col items-center">
-          <span className="text-sm font-bold text-gray-900">BackCare Protocol</span>
-          <div className="bg-[#E0F2F1] px-2 py-0.5 rounded-md mt-0.5">
-             <span className="text-[10px] font-bold text-[#009688] tracking-wider uppercase">
+          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">BackCare Protocol</span>
+          <div className="bg-[#E0F2F1] dark:bg-teal-900/30 px-2 py-0.5 rounded-md mt-0.5">
+             <span className="text-[10px] font-bold text-[#009688] dark:text-teal-400 tracking-wider uppercase">
                {routine.category}
              </span>
           </div>
         </div>
 
-        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border-2 border-white shadow-sm">
-           <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" />
+        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden border-2 border-white dark:border-gray-800 shadow-sm">
+           <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Usuario" />
         </div>
       </header>
 
@@ -68,18 +68,18 @@ const RoutineDetailScreen: React.FC = () => {
             <div className="relative w-full h-56 rounded-[32px] overflow-hidden shadow-lg shadow-green-900/10 z-10">
                 <div className="absolute inset-0 bg-[#4A7A65]">
                     {/* ✅ Ahora la imagen es dinámica */}
-                    <img 
-                        src={routine.image} 
-                        alt="Cover" 
+                    <img
+                        src={routine.image}
+                        alt="Portada"
                         className="w-full h-full object-cover opacity-60 mix-blend-overlay"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#2D5A48] via-transparent to-transparent opacity-90"></div>
                 </div>
 
                 <div className="absolute inset-0 p-6 flex flex-col justify-between">
-                    <div className="self-start bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
-                        <span className="material-symbols-outlined text-teal-600 text-sm">schedule</span>
-                        <span className="text-xs font-bold text-gray-800">{routine.duration} • {totalExercises} ejercicios</span>
+                    <div className="self-start bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm border border-white/30 dark:border-slate-700/30">
+                        <span className="material-symbols-outlined text-teal-600 dark:text-teal-400 text-sm">schedule</span>
+                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200">{routine.duration} • {totalExercises} ejercicios</span>
                     </div>
 
                     <div>
@@ -100,22 +100,22 @@ const RoutineDetailScreen: React.FC = () => {
             </div>
 
             <div className="absolute -bottom-4 -right-2 w-24 h-24 z-20 transform rotate-3 drop-shadow-xl">
-                 <img 
-                    src="/images/anime/GokuChibiBannerSerio.png" 
-                    alt="Chibi Mascot" 
-                    className="w-full h-full object-contain" 
+                 <img
+                    src="/images/anime/GokuChibiBannerSerio.png"
+                    alt="Mascota Chibi"
+                    className="w-full h-full object-contain"
                  />
             </div>
         </div>
 
         {/* WARNING CARD */}
-        <div className="bg-[#FFF9E5] border border-[#FFEBB0] rounded-3xl p-5 mb-8 flex gap-4 items-start">
-            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm text-amber-500">
+        <div className="bg-[#FFF9E5] dark:bg-amber-900/20 border border-[#FFEBB0] dark:border-amber-700/30 rounded-3xl p-5 mb-8 flex gap-4 items-start">
+            <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shrink-0 shadow-sm text-amber-500">
                 <span className="material-symbols-outlined text-2xl">warning</span>
             </div>
             <div>
-                <h3 className="font-bold text-gray-900 text-sm mb-1">Importante - Fase 1 (Primeras 4 semanas)</h3>
-                <p className="text-xs text-gray-600 leading-relaxed">
+                <h3 className="font-bold text-gray-900 dark:text-gray-100 text-sm mb-1">Importante - Fase 1 (Primeras 4 semanas)</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
                     <strong>NUNCA</strong> busques altura o rango máximo. Busca <strong>control y estabilidad</strong>. Si sientes dolor agudo, detente inmediatamente. La clave es la <strong>calidad del movimiento</strong>, no la cantidad.
                 </p>
             </div>
@@ -123,16 +123,16 @@ const RoutineDetailScreen: React.FC = () => {
 
         {/* LISTA DE EJERCICIOS */}
         <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Secuencia</h2>
-            <span className="bg-purple-100 text-purple-600 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Secuencia</h2>
+            <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">
                 {totalExercises} Pasos
             </span>
         </div>
 
         <div className="space-y-4">
             {routine.exercises.map((exercise, index) => (
-                <button 
-                    key={exercise.id} 
+                <button
+                    key={exercise.id}
                     onClick={() => {
                         // Empaquetamos SOLO este ejercicio como si fuera una rutina de 1 paso
                         const singleExerciseData = {
@@ -153,47 +153,47 @@ const RoutineDetailScreen: React.FC = () => {
                           navigate(`/exercise/${encodedData}`);
                         }
                     }}
-                    className="w-full text-left bg-white p-3 pr-4 rounded-[20px] flex items-center gap-4 shadow-sm border border-gray-50/50 hover:bg-gray-50 active:scale-[0.98] transition-all cursor-pointer group"
+                    className="w-full text-left bg-white dark:bg-gray-800 p-3 pr-4 rounded-[20px] flex items-center gap-4 shadow-sm border border-gray-50/50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 active:scale-[0.98] transition-all cursor-pointer group"
                 >
                     <div className="relative shrink-0">
-                         <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden">
+                         <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-700 overflow-hidden">
                              <img src={exercise.avatar} alt={exercise.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                          </div>
-                         <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-white border-2 border-gray-50 flex items-center justify-center shadow-sm z-10">
-                             <span className="text-xs font-bold text-gray-800">{index + 1}</span>
+                         <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-white dark:bg-gray-800 border-2 border-gray-50 dark:border-gray-600 flex items-center justify-center shadow-sm z-10">
+                             <span className="text-xs font-bold text-gray-800 dark:text-gray-200">{index + 1}</span>
                          </div>
                     </div>
 
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-gray-900 text-base">{exercise.name}</h3>
-                        <p className="text-[10px] font-bold text-[#00E6CC] uppercase mb-1 tracking-wide truncate">{exercise.target}</p>
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{exercise.name}</h3>
+                        <p className="text-[10px] font-bold text-[#00E6CC] dark:text-teal-400 uppercase mb-1 tracking-wide truncate">{exercise.target}</p>
                         <div className="flex items-center gap-2">
-                            <span className="bg-gray-100 text-gray-600 text-[10px] font-medium px-2 py-0.5 rounded-md whitespace-nowrap">{exercise.sets} Series</span>
-                            <span className="bg-gray-100 text-gray-600 text-[10px] font-medium px-2 py-0.5 rounded-md truncate">{exercise.repsOrDuration}</span>
+                            <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-medium px-2 py-0.5 rounded-md whitespace-nowrap">{exercise.sets} Series</span>
+                            <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-medium px-2 py-0.5 rounded-md truncate">{exercise.repsOrDuration}</span>
                         </div>
                     </div>
 
-                    <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center group-hover:bg-[#1CD6A8] transition-colors">
-                        <span className="material-symbols-outlined text-teal-600 group-hover:text-white text-xl">play_arrow</span>
+                    <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center group-hover:bg-[#1CD6A8] transition-colors">
+                        <span className="material-symbols-outlined text-teal-600 dark:text-teal-400 group-hover:text-white text-xl">play_arrow</span>
                     </div>
                 </button>
             ))}
         </div>
 
         {/* Descripción adicional */}
-        <div className="mt-6 p-4 bg-white rounded-2xl border border-gray-100">
-          <p className="text-xs text-gray-600 leading-relaxed">
+        <div className="mt-6 p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
+          <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
             {routine.description}
           </p>
         </div>
 
         {/* Frase Motivacional */}
         <div className="flex items-center gap-3 mt-6 mb-8 ml-2">
-             <div className="w-[60px] h-[60px] rounded-full bg-gray-200 overflow-hidden border border-white">
-                <img src="/images/anime/GokuBustoAnimo.png" alt="Coach" />
+             <div className="w-[60px] h-[60px] rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden border border-white dark:border-gray-600">
+                <img src="/images/anime/GokuBustoAnimo.png" alt="Entrenador" />
              </div>
-             <div className="bg-white px-4 py-2 rounded-tl-xl rounded-tr-xl rounded-br-xl shadow-sm border border-gray-100">
-                 <p className="text-xs font-semibold text-gray-700">¡Tú puedes hacerlo! ✨</p>
+             <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-tl-xl rounded-tr-xl rounded-br-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                 <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">¡Tú puedes hacerlo! ✨</p>
              </div>
         </div>
 
@@ -221,7 +221,7 @@ const RoutineDetailScreen: React.FC = () => {
           className="w-full h-14 bg-[#1CD6A8] hover:bg-[#15c296] active:scale-[0.98] transition-all rounded-full flex items-center justify-between px-2 pl-6 shadow-lg shadow-teal-500/30 group mt-4"
         >
           <span className="text-white font-bold text-lg tracking-wide">Estoy listo, comenzar</span>
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors">
+          <div className="w-10 h-10 bg-white/20 dark:bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white/30 dark:group-hover:bg-white/20 transition-colors">
             <span className="material-symbols-outlined text-white">arrow_forward</span>
           </div>
         </button>

@@ -11,17 +11,17 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ theme = NavTheme.Pu
   const location = useLocation();
 
   const activeColor = theme === NavTheme.Mint ? 'text-primary' : 'text-purple-main';
-  const inactiveColor = 'text-gray-300 dark:text-gray-600';
+  const inactiveColor = 'text-gray-300 dark:text-gray-400';
 
   const navItems = [
-    { icon: 'home', label: 'Home', path: '/home' },
-    { icon: 'bar_chart', label: 'Progress', path: '/progress' },
-    { icon: 'person', label: 'Profile', path: '/profile' },
+    { icon: 'home', label: 'Inicio', path: '/home' },
+    { icon: 'bar_chart', label: 'Progreso', path: '/progress' },
+    { icon: 'person', label: 'Perfil', path: '/profile' },
   ];
 
   return (
     <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-[90%] z-50">
-      <div className="glass-nav rounded-[2rem] shadow-2xl p-2 flex justify-between items-center border border-white/50">
+      <div className="glass-nav dark:bg-[#231e33] dark:backdrop-blur-xl rounded-[2rem] shadow-2xl p-2 flex justify-between items-center border border-white/50 dark:border-gray-700 transition-colors duration-300">
         {navItems.map((item) => {
           const isActive = location.pathname.startsWith(item.path);
           return (

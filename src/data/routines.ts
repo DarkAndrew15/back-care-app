@@ -13,7 +13,7 @@ export const routinesData = {
       {
         id: 'mcgill-1',
         name: 'Curl-Up (Abdominal Modificado)',
-        target: 'Core',
+        target: 'Núcleo',
         duration: 300,
         sets: 3,
         reps: 9,

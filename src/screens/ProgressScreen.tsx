@@ -60,7 +60,7 @@ const ProgressScreen: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-gray-50 font-display flex items-center justify-center min-h-screen py-8 px-4" style={{ backgroundImage: 'radial-gradient(#dcd6f7 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+    <div className="bg-gray-50 dark:bg-slate-900 font-display flex items-center justify-center min-h-screen py-8 px-4 transition-colors duration-300 bg-[radial-gradient(#dcd6f7_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] bg-[size:20px_20px]">
       <div className="relative w-full max-w-[375px] bg-background-light dark:bg-background-dark h-[812px] rounded-3xl shadow-2xl overflow-hidden border-4 border-white ring-1 ring-black/5 flex flex-col">
         {/* Status Bar Mockup */}
         <div className="h-6 w-full flex justify-between items-center px-6 pt-3 pb-1 z-20">
@@ -83,8 +83,8 @@ const ProgressScreen: React.FC = () => {
               </div>
             </div>
             <div className="h-12 w-12 rounded-full p-[2px] shadow-sm bg-gradient-to-tr from-primary to-purple-main">
-              <div className="h-full w-full rounded-full bg-white p-[2px]">
-                <img alt="User profile picture" className="h-full w-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8vxDyntLQBx2oaeFcbClnSHxMMB6f1fuUvtD_h5sdShL0FeLIuo-lKAlJ3RL0f31Nj6FMVGrpFk05C09XSou6SETeus7Ul2WluUc3QgbkpkFr8e_gc4pLA_H546nHqRTMsJxJNZTmL3PBkahnVSrN_Z9Rep5q33gxJ4IQtmYYNp8zE14sSsoArKuClwCfzxlKCDdXrrAZft9458qxdLOxzKmka-aKqcB_f8nT9E3iEG9j9yryGZ_xvAHhl8JqXoHPjqePGqux3Q"/>
+              <div className="h-full w-full rounded-full bg-white dark:bg-slate-700 p-[2px]">
+                <img alt="Foto de perfil del usuario" className="h-full w-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8vxDyntLQBx2oaeFcbClnSHxMMB6f1fuUvtD_h5sdShL0FeLIuo-lKAlJ3RL0f31Nj6FMVGrpFk05C09XSou6SETeus7Ul2WluUc3QgbkpkFr8e_gc4pLA_H546nHqRTMsJxJNZTmL3PBkahnVSrN_Z9Rep5q33gxJ4IQtmYYNp8zE14sSsoArKuClwCfzxlKCDdXrrAZft9458qxdLOxzKmka-aKqcB_f8nT9E3iEG9j9yryGZ_xvAHhl8JqXoHPjqePGqux3Q"/>
               </div>
             </div>
           </div>
@@ -213,7 +213,7 @@ const ProgressScreen: React.FC = () => {
                    <circle cx="100" cy="45" fill="white" r="1.5" stroke="#2beebd" strokeWidth="1.5"></circle>
                 </svg>
                 <div className="absolute -bottom-2 -right-2 w-24 h-24 z-10 pointer-events-none">
-                  <img alt="Mascot character" className="w-full h-full object-contain drop-shadow-lg transform scale-x-[-1]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwWgrISlrwTFc7jmRvUKHhWqfEXme0byWlD4beyks0eo3XSf1o6b9NV283nIm1O-Wb-4FuWVlikEtVu8BhrfqREoUdEA-gK8n-bQkv2uxaCWHGuBdIrcexuyxYG1hxb1CpMKVrRowcKSVwCZjvpWqDCXe9NmJzZnbIVddt5W0Cl_m06twfAgqgryYCCK0Zgyuu7cSFvkrHT6i8uK_m7oXTfjX_fksq6cmPLZv83yKDg8mse6fxtObhEsMd2Gw5Njwv9WoLUuuJCQ"/>
+                  <img alt="Personaje mascota" className="w-full h-full object-contain drop-shadow-lg transform scale-x-[-1]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwWgrISlrwTFc7jmRvUKHhWqfEXme0byWlD4beyks0eo3XSf1o6b9NV283nIm1O-Wb-4FuWVlikEtVu8BhrfqREoUdEA-gK8n-bQkv2uxaCWHGuBdIrcexuyxYG1hxb1CpMKVrRowcKSVwCZjvpWqDCXe9NmJzZnbIVddt5W0Cl_m06twfAgqgryYCCK0Zgyuu7cSFvkrHT6i8uK_m7oXTfjX_fksq6cmPLZv83yKDg8mse6fxtObhEsMd2Gw5Njwv9WoLUuuJCQ"/>
                 </div>
                 <div className="absolute top-8 right-2 bg-white dark:bg-gray-700 p-2 rounded-xl rounded-br-none shadow-md border border-gray-100 dark:border-gray-600 max-w-[100px] z-20 animate-bounce" style={{ animationDuration: '3s' }}>
                   <p className="text-[9px] font-bold text-gray-600 dark:text-gray-200 leading-tight">¡Genial! El dolor bajó 15%</p>

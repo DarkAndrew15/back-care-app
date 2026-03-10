@@ -3,9 +3,9 @@ import BottomNavigation from '../components/BottomNavigation';
 
 const ProfileScreen: React.FC = () => {
   const menuItems = [
-    { icon: 'manage_accounts', label: 'My Data', color: 'bg-blue-100 text-blue-500' },
-    { icon: 'notifications', label: 'Reminders', color: 'bg-yellow-100 text-yellow-500' },
-    { icon: 'support_agent', label: 'Support', color: 'bg-green-100 text-green-500' },
+    { icon: 'manage_accounts', label: 'Mis Datos', color: 'bg-blue-100 text-blue-500' },
+    { icon: 'notifications', label: 'Recordatorios', color: 'bg-yellow-100 text-yellow-500' },
+    { icon: 'support_agent', label: 'Soporte', color: 'bg-green-100 text-green-500' },
   ];
 
   return (
@@ -14,17 +14,17 @@ const ProfileScreen: React.FC = () => {
       <div className="pt-12 px-6 pb-8 flex flex-col items-center relative">
         <div className="relative mb-4">
           <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl transform scale-110"></div>
-          <div className="w-28 h-28 rounded-full border-4 border-white shadow-glow overflow-hidden relative z-10 bg-card-lavender">
+          <div className="w-28 h-28 rounded-full border-4 border-white dark:border-gray-800 shadow-glow overflow-hidden relative z-10 bg-card-lavender dark:bg-[#2d2438] transition-colors">
             <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAXo0viXGbD6zFUWwh7Czo4nqfLbcrqXIRYbO-5BQvjn8rXUPP3UaP2RUBJEAqm_h587rTPLEk5ktkkuqhIlNSSGWgLgYcBFnHCTJBJPJAoQBEjFD5qrfO3GFqKMjldnAVLiNAD41fck4ka1LWW_SjHRARkMHRaksDpyAXBq6n1gHO_vRvivC_M4qYKcDau9qixxa3q7vR7nqRCZ7TgUAAlfjBn1MWWyvGP7FUfUFKW3rmp1SiTiwM-uP79472f4yhdGErbNwiwnQ')" }}></div>
           </div>
-          <div className="absolute bottom-1 right-1 bg-accent-mint text-white rounded-full p-1.5 border-2 border-white shadow-sm z-20">
+          <div className="absolute bottom-1 right-1 bg-accent-mint text-white rounded-full p-1.5 border-2 border-white dark:border-gray-700 shadow-sm z-20">
             <span className="material-symbols-outlined text-[16px] block">edit</span>
           </div>
         </div>
         <h1 className="text-2xl font-extrabold text-text-main dark:text-white leading-tight mb-1">Hiro</h1>
-        <div className="flex items-center gap-1.5 bg-card-lavender px-3 py-1 rounded-full border border-white/50 shadow-sm">
+        <div className="flex items-center gap-1.5 bg-card-lavender dark:bg-[#2d2438] px-3 py-1 rounded-full border border-white/50 dark:border-gray-700 shadow-sm transition-colors">
            <span className="material-symbols-outlined text-primary text-[16px]">verified</span>
-           <span className="text-xs font-bold text-primary-dark">Nivel 5: Guerrero de Espalda</span>
+           <span className="text-xs font-bold text-primary-dark dark:text-primary-light">Nivel 5: Guerrero de Espalda</span>
         </div>
         <div className="absolute top-10 right-4 w-16 h-16 pointer-events-none animate-bounce" style={{ animationDuration: '3s' }}>
           <div className="w-full h-full bg-contain bg-center bg-no-repeat" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB8qpkSRNGtrCJaEGob9A9rFwi-R0l0ouvGiIaTSYtjDCZGEL593ZOooQGaxT4xvQ2zXEA6r2nm8PcD0SYC9ezCtQuryHoWIFRamseTJ7Rt72UZNh-u8lTPDphB91xeS2WyglfPqoq98Ws5aI6xs4-_sTLVpANl0NeEOMb8lz9cOw5BFBrS6SlxrQ0Dhl78jFyeAGXVyjTsy15HAInkeEvMNPEFPm2jzSJXlvaXHypLcaH6qlToGmlrpZoWnLoGb7y5LjS1Wyyksw')", transform: 'scaleX(-1)' }}></div>
@@ -63,7 +63,7 @@ const ProfileScreen: React.FC = () => {
             <div className="flex-1 text-left">
                <h4 className="text-sm font-bold text-text-main dark:text-white">{item.label}</h4>
                <p className="text-[11px] text-gray-500">
-                 {item.label === 'My Data' ? 'Editar perfil, peso y altura' : item.label === 'Reminders' ? 'Configurar alertas diarias' : 'Consulta con especialistas'}
+                 {item.label === 'Mis Datos' ? 'Editar perfil, peso y altura' : item.label === 'Recordatorios' ? 'Configurar alertas diarias' : 'Consulta con especialistas'}
                </p>
             </div>
             <span className="material-symbols-outlined text-gray-300 text-[20px]">chevron_right</span>

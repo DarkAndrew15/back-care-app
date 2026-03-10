@@ -61,3 +61,31 @@ body {
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
+
+/* =========================================
+   ADAPTACIÓN A MODO OSCURO (DARK MODE)
+   ========================================= */
+
+/* 1. Fondo del escritorio y patrón de puntos */
+.dark body {
+  background-color: #0f172a; /* slate-900 */
+  background-image: radial-gradient(#1e293b 1px, transparent 1px); /* Puntos oscuros */
+}
+
+/* 2. Fondo base del teléfono y borde en Desktop */
+.dark #root {
+  background-color: #111827; /* gray-900 */
+}
+
+@media (min-width: 640px) {
+  .dark #root {
+    border-color: #1e293b; /* Borde oscuro en lugar de blanco brillante */
+    box-shadow: 0 0 50px rgba(0,0,0,0.5); /* Sombra más pronunciada */
+  }
+}
+
+/* 3. Arreglo para la barra de navegación (Sobrescribe el rgba blanco) */
+.dark .glass-nav {
+  background: rgba(35, 30, 51, 0.85); /* Fondo oscuro translúcido */
+  border-color: rgba(255, 255, 255, 0.05); /* Borde súper sutil */
+}

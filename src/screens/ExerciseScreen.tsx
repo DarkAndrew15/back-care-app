@@ -397,39 +397,52 @@ const ExerciseScreen: React.FC = () => {
     let completedScreens = 0;
     let totalScreens = 0;
 
+    // 1. Calcular el total REAL de "pantallas" o repeticiones de toda la rutina
     exercises.forEach((ex, idx) => {
-      const repsCount = getRepsCount(ex);
-      // Para ejercicios con lados, cada serie tiene 2 * repsCount (ida y vuelta)
       const hasSides = ex.id === 'mcgill-2' || ex.id === 'mcgill-3' || ex.id === 'side-plank';
-      const exerciseScreens = ex.sets * repsCount * (hasSides ? 2 : 1);
-      totalScreens += exerciseScreens;
+      const sidesMultiplier = hasSides ? 2 : 1;
+      let exerciseTotalReps = 0;
 
+      if (ex.id.startsWith('mcgill-')) {
+        // Para McGill, sabemos exactamente que la pirámide 5-3-1 suma 9 reps por lado
+        exerciseTotalReps = 9 * sidesMultiplier;
+      } else {
+        // Lógica legacy para otros ejercicios genéricos
+        const repsPerSet = typeof ex.reps === 'number' ? ex.reps : (String(ex.reps).match(/\d+/) ? parseInt(String(ex.reps).match(/\d+/)![0]) : 5);
+        exerciseTotalReps = ex.sets * repsPerSet * sidesMultiplier;
+      }
+
+      totalScreens += exerciseTotalReps;
+
+      // 2. Sumar al progreso los ejercicios ANTERIORES ya terminados
       if (idx < currentExerciseIndex) {
-        completedScreens += exerciseScreens;
+        completedScreens += exerciseTotalReps;
       }
     });
 
+    // 3. Sumar el progreso exacto del ejercicio ACTUAL en curso
     if (currentExerciseIndex < exercises.length && currentExercise) {
-      const currentRepsCount = getRepsCount(currentExercise);
       const currentHasSides = currentExercise.id.startsWith('mcgill-') &&
                                (currentExercise.id === 'mcgill-2' || currentExercise.id === 'mcgill-3');
 
-      // Completar series anteriores
-      completedScreens += (currentSet - 1) * currentRepsCount * (currentHasSides ? 2 : 1);
-
-      // ✅ Manejo para McGill Big 3 con lados
-      if (currentHasSides) {
-        // Contar repeticiones completadas del lado derecho
-        completedScreens += (currentRep - 1);
-        // Si está en lado izquierdo, sumar todas las reps del lado derecho + reps del izquierdo
-        if (currentSide === 'left') {
-          completedScreens += currentRepsCount;
-        }
+      // A. Sumar las series completas anteriores de este ejercicio
+      for (let s = 1; s < currentSet; s++) {
+        const repsInSet = currentExercise.id.startsWith('mcgill-') ? getTargetRepsForSet(currentExercise.reps as number, s) : getRepsCount(currentExercise);
+        completedScreens += repsInSet * (currentHasSides ? 2 : 1);
       }
-      // ✅ Manejo para ejercicios sin lados (mcgill-1 y legacy)
-      else if (currentExercise.id === 'side-plank') {
-        if (currentSide === 'left') completedScreens += 1;
+
+      // B. Sumar las repeticiones completadas de la serie actual
+      if (currentHasSides) {
+        if (currentSide === 'right') {
+          // Lado 1 (Derecho): solo sumamos las reps completadas de este lado
+          completedScreens += (currentRep - 1);
+        } else {
+          // Lado 2 (Izquierdo): sumamos TODO el Lado 1 + las reps del Lado 2
+          const totalRepsCurrentSet = getTargetRepsForSet(currentExercise.reps as number, currentSet);
+          completedScreens += totalRepsCurrentSet + (currentRep - 1);
+        }
       } else {
+        // Ejercicio sin lados (Curl-Up)
         completedScreens += (currentRep - 1);
       }
     }
@@ -488,13 +501,13 @@ const ExerciseScreen: React.FC = () => {
   const strokeDashoffset = strokeDasharray - (timerProgress / 100) * strokeDasharray;
 
   return (
-    <div className="bg-[#f8f6f2] text-[#333333] font-display overflow-hidden flex items-center justify-center min-h-screen relative selection:bg-primary selection:text-white">
-      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-background-light">
+    <div className="bg-[#f8f6f2] dark:bg-slate-900 text-[#333333] dark:text-white font-display overflow-hidden flex items-center justify-center min-h-screen relative selection:bg-primary selection:text-white transition-colors duration-300">
+      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-background-light dark:bg-slate-950">
         <div className="absolute inset-0 bg-cover bg-center blur-2xl opacity-20" style={{ backgroundImage: `url('${currentExercise.image}')`, filter: 'hue-rotate(45deg) brightness(1.5)' }}></div>
       </div>
-      
-      <div className="relative z-10 w-full max-w-[375px] h-[812px] max-h-screen bg-background-light sm:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col sm:border-[6px] sm:border-white ring-1 ring-black/5">
-        <header className="flex flex-col px-6 pt-8 pb-4 gap-4 bg-background-light/95 backdrop-blur-sm sticky top-0 z-20">
+
+      <div className="relative z-10 w-full max-w-[375px] h-[812px] max-h-screen bg-background-light dark:bg-[#121826] sm:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col sm:border-[6px] sm:border-white dark:sm:border-slate-800 ring-1 ring-black/5 transition-colors duration-300">
+        <header className="flex flex-col px-6 pt-8 pb-4 gap-4 bg-background-light/95 dark:bg-[#121826]/95 backdrop-blur-sm sticky top-0 z-20 transition-colors">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="h-6 px-2.5 rounded-full bg-purple-light/50 flex items-center border border-primary/10">
@@ -506,7 +519,7 @@ const ExerciseScreen: React.FC = () => {
             {/* ✅ 3. Botón volver a RoutineDetailScreen */}
             <button
               onClick={() => setShowExitModal(true)}
-              className="size-9 flex items-center justify-center rounded-full bg-white shadow-soft text-gray-500 hover:text-primary hover:scale-105 transition-all border border-white"
+              className="size-9 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-soft text-gray-500 dark:text-gray-400 hover:text-primary hover:scale-105 transition-all border border-white dark:border-slate-700"
             >
               <span className="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -540,10 +553,10 @@ const ExerciseScreen: React.FC = () => {
             <>
               <div className="w-full px-5 mb-6 relative group mt-2">
                 <div className="absolute -inset-2 bg-gradient-to-r from-purple-main to-primary rounded-[1.5rem] blur-xl opacity-10 group-hover:opacity-20 transition duration-500"></div>
-                <div className="relative aspect-[4/3] w-full bg-white rounded-2xl overflow-hidden shadow-soft border border-white">
+                <div className="relative aspect-[4/3] w-full bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-soft border border-white dark:border-slate-700 transition-colors">
                   <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${currentExercise.image}')`, filter: 'contrast(0.95) brightness(1.05)' }}></div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent"></div>
-                  <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-md rounded-lg shadow-sm border border-white/50">
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/20 dark:from-slate-900/40 to-transparent"></div>
+                  <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-lg shadow-sm border border-white/50 dark:border-slate-700/50 transition-colors">
                     <span className="text-[10px] font-extrabold text-primary tracking-widest uppercase">{currentExercise.name}</span>
                   </div>
                 </div>
@@ -555,7 +568,7 @@ const ExerciseScreen: React.FC = () => {
           <div className="relative flex items-center justify-center py-2 mb-4">
             <div className="absolute w-48 h-48 rounded-full border border-primary/10 animate-pulse bg-purple-light/20"></div>
             <div className="absolute w-56 h-56 rounded-full border border-purple-main/10 opacity-30"></div>
-            <div className="relative w-44 h-44 flex items-center justify-center bg-white rounded-full shadow-soft border border-white ring-4 ring-background-light/50">
+            <div className="relative w-44 h-44 flex items-center justify-center bg-white dark:bg-slate-800 rounded-full shadow-soft border border-white dark:border-slate-700 ring-4 ring-background-light/50 dark:ring-slate-900/50 transition-colors">
               <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" fill="none" r="44" stroke="#f3f4f6" strokeWidth="3"></circle>
                 <circle 
@@ -589,29 +602,29 @@ const ExerciseScreen: React.FC = () => {
           {/* INSTRUCCIONES (solo si NO está descansando) */}
           {!isResting && (
             <div className="w-full px-5 space-y-4">
-              <div className="bg-white rounded-2xl p-6 relative overflow-hidden shadow-soft border border-white z-0">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-purple-light/50 to-transparent rounded-bl-[4rem] -mr-6 -mt-6 z-0"></div>
-                <h3 className="text-base font-bold text-[#333333] mb-4 flex items-center gap-2 relative z-10">
-                  <div className="p-1.5 bg-purple-light rounded-full text-primary">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 relative overflow-hidden shadow-soft border border-white dark:border-slate-700 z-0 transition-colors">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-purple-light/50 dark:from-purple-900/30 to-transparent rounded-bl-[4rem] -mr-6 -mt-6 z-0"></div>
+                <h3 className="text-base font-bold text-[#333333] dark:text-white mb-4 flex items-center gap-2 relative z-10 transition-colors">
+                  <div className="p-1.5 bg-purple-light dark:bg-purple-900/40 rounded-full text-primary">
                     <span className="material-symbols-outlined text-[18px]">lightbulb</span>
                   </div>
                   Técnica Correcta
                 </h3>
-                <ol className="space-y-4 relative border-l-2 border-dashed border-gray-100 ml-3 pl-5 z-10">
+                <ol className="space-y-4 relative border-l-2 border-dashed border-gray-100 dark:border-slate-600 ml-3 pl-5 z-10">
                   {currentExercise.instructions.slice(0, 2).map((instruction, idx) => (
                     <li key={idx} className="relative">
-                      <span className={`absolute -left-[27px] top-1.5 w-3 h-3 rounded-full ${idx === 0 ? 'bg-purple-main' : 'bg-primary'} ring-4 ring-white shadow-sm`}></span>
-                      <p className="text-sm text-gray-500 leading-relaxed font-medium">{instruction}</p>
+                      <span className={`absolute -left-[27px] top-1.5 w-3 h-3 rounded-full ${idx === 0 ? 'bg-purple-main' : 'bg-primary'} ring-4 ring-white dark:ring-slate-800 shadow-sm transition-colors`}></span>
+                      <p className="text-sm text-gray-500 dark:text-gray-300 leading-relaxed font-medium transition-colors">{instruction}</p>
                     </li>
                   ))}
                 </ol>
               </div>
-              
-              <div className="bg-rose-50/60 border border-rose-100 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
-                <span className="material-symbols-outlined text-rose-400 mt-0.5 shrink-0">warning</span>
+
+              <div className="bg-rose-50/60 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl p-4 flex items-start gap-3 shadow-sm transition-colors">
+                <span className="material-symbols-outlined text-rose-400 dark:text-rose-500 mt-0.5 shrink-0">warning</span>
                 <div className="flex flex-col gap-2">
                   {currentExercise.warnings.map((warning, idx) => (
-                    <p key={idx} className="text-xs text-rose-600 font-semibold leading-relaxed">
+                    <p key={idx} className="text-xs text-rose-600 dark:text-rose-300 font-semibold leading-relaxed transition-colors">
                       {currentExercise.warnings.length > 1 && <span className="mr-1">•</span>}
                       {warning}
                     </p>
@@ -624,31 +637,32 @@ const ExerciseScreen: React.FC = () => {
           
           {/* PERSONAJE MOTIVADOR */}
           <div className="absolute bottom-32 right-5 z-20 flex flex-col items-end animate-bounce" style={{ animationDuration: '3s' }}>
-            <div className="bg-white text-[#333333] text-xs font-bold px-4 py-2 rounded-t-2xl rounded-bl-2xl mb-2 shadow-soft border border-white relative max-w-[140px] text-center">
+            <div className="bg-white dark:bg-slate-800 text-[#333333] dark:text-white text-xs font-bold px-4 py-2 rounded-t-2xl rounded-bl-2xl mb-2 shadow-soft border border-white dark:border-slate-700 relative max-w-[140px] text-center transition-colors">
               <span className="bg-gradient-to-r from-purple-main to-primary bg-clip-text text-transparent">
                 {isResting ? '¡Respira!' : '¡Tú puedes!'}
               </span>
-              <div className="absolute -bottom-2 right-0 w-0 h-0 border-l-[8px] border-l-transparent border-t-[8px] border-t-white border-r-[0px] border-r-transparent filter drop-shadow-sm"></div>
+              {/* Triángulo de la burbuja */}
+              <div className="absolute -bottom-2 right-0 w-0 h-0 border-l-[8px] border-l-transparent border-t-[8px] border-t-white dark:border-t-slate-800 border-r-[0px] border-r-transparent filter drop-shadow-sm transition-colors"></div>
             </div>
-            <div className="size-16 rounded-full border-[3px] border-white bg-gradient-to-br from-[#e0f7fa] to-[#ede7f6] shadow-soft flex items-center justify-center overflow-hidden relative">
-              <span className="material-symbols-outlined text-4xl text-[#333333]/80">face_5</span>
+            <div className="size-16 rounded-full border-[3px] border-white dark:border-slate-700 bg-gradient-to-br from-[#e0f7fa] dark:from-slate-700 to-[#ede7f6] dark:to-slate-800 shadow-soft flex items-center justify-center overflow-hidden relative transition-colors">
+              <span className="material-symbols-outlined text-4xl text-[#333333]/80 dark:text-gray-300">face_5</span>
             </div>
           </div>
         </main>
 
         {/* BOTONES INFERIORES */}
-        <div className="absolute bottom-0 w-full px-6 pb-8 pt-16 bg-gradient-to-t from-background-light via-background-light/95 to-transparent z-10 flex flex-col items-center pointer-events-none">
+        <div className="absolute bottom-0 w-full px-6 pb-8 pt-16 bg-gradient-to-t from-background-light dark:from-[#121826] via-background-light/95 dark:via-[#121826]/95 to-transparent z-10 flex flex-col items-center pointer-events-none transition-colors">
           <div className="flex items-center justify-between w-full max-w-[280px] pointer-events-auto">
             <button
               onClick={isResting ? finishRest : handleNext}
               className="flex flex-col items-center justify-center gap-1 group"
             >
-              <div className="size-11 rounded-full bg-white shadow-soft flex items-center justify-center text-gray-500 group-hover:text-primary group-hover:scale-110 transition-all border border-white">
+              <div className="size-11 rounded-full bg-white dark:bg-slate-800 shadow-soft flex items-center justify-center text-gray-500 dark:text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all border border-white dark:border-slate-700">
                 <span className="material-symbols-outlined text-xl">skip_next</span>
               </div>
-              <span className="text-[9px] font-bold text-[#333333]/40 uppercase tracking-wide mt-1">Saltar</span>
+              <span className="text-[9px] font-bold text-[#333333]/40 dark:text-gray-400 uppercase tracking-wide mt-1">Saltar</span>
             </button>
-            <button 
+            <button
                 onClick={() => setIsActive(!isActive)}
                 className="size-20 -mt-8 rounded-full bg-gradient-to-br from-purple-main to-primary shadow-glow flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all border-[5px] border-background-light relative z-20 group"
             >
@@ -657,13 +671,13 @@ const ExerciseScreen: React.FC = () => {
               </span>
             </button>
             <button className="flex flex-col items-center justify-center gap-1 group">
-              <div className="size-11 rounded-full bg-white shadow-soft flex items-center justify-center text-gray-500 group-hover:text-primary group-hover:scale-110 transition-all border border-white">
+              <div className="size-11 rounded-full bg-white dark:bg-slate-800 shadow-soft flex items-center justify-center text-gray-500 dark:text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all border border-white dark:border-slate-700">
                 <span className="material-symbols-outlined text-xl">volume_up</span>
               </div>
-              <span className="text-[9px] font-bold text-[#333333]/40 uppercase tracking-wide mt-1">Sonido</span>
+              <span className="text-[9px] font-bold text-[#333333]/40 dark:text-gray-400 uppercase tracking-wide mt-1">Sonido</span>
             </button>
           </div>
-          <p className="text-[11px] text-gray-500 mt-5 font-semibold bg-white/50 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/50 shadow-sm pointer-events-auto">
+          <p className="text-[11px] text-gray-500 dark:text-gray-300 mt-5 font-semibold bg-white/50 dark:bg-slate-800/80 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/50 dark:border-slate-700/50 shadow-sm pointer-events-auto">
             {isResting ? (
               <span className="text-amber-600">Descansando • {restTime}s restantes</span>
             ) : (
@@ -678,27 +692,27 @@ const ExerciseScreen: React.FC = () => {
       {showExitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
           {/* Overlay oscuro */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowExitModal(false)}
           ></div>
-          
+
           {/* Modal */}
-          <div className="relative bg-white rounded-3xl p-6 max-w-[320px] w-full shadow-2xl border border-white animate-[scale-in_0.2s_ease-out]">
+          <div className="relative bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-[320px] w-full shadow-2xl border border-white dark:border-slate-700 animate-[scale-in_0.2s_ease-out]">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-rose-50 flex items-center justify-center">
-                <span className="material-symbols-outlined text-4xl text-rose-500">warning</span>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-4xl text-rose-500 dark:text-rose-400">warning</span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">¿Salir del ejercicio?</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">¿Salir del ejercicio?</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 Perderás todo el progreso de esta sesión y tendrás que comenzar de nuevo.
               </p>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={() => setShowExitModal(false)}
-                className="flex-1 h-12 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 active:scale-95 transition-all"
+                className="flex-1 h-12 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-200 dark:hover:bg-slate-600 active:scale-95 transition-all"
               >
                 Cancelar
               </button>

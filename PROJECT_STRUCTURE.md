@@ -42,7 +42,9 @@ backcare/
 ├── App.tsx                    # Componente principal de la aplicación con rutas
 ├── index.html                 # Punto de entrada HTML
 ├── index.tsx                  # Punto de entrada de la aplicación React
+├── InstruccionesPrompt.txt    # Instrucciones para prompts de IA
 ├── metadata.json              # Metadatos del proyecto
+├── OrigenBackCare.txt         # Documento de origen del proyecto
 ├── package.json               # Dependencias y scripts del proyecto
 ├── pnpm-lock.yaml             # Archivo de bloqueo de dependencias de pnpm
 ├── postcss.config.js          # Configuración de PostCSS
@@ -55,6 +57,8 @@ backcare/
 ├── src/                       # Código fuente principal
 │   ├── components/            # Componentes reutilizables
 │   │   └── BottomNavigation.tsx # Componente de navegación inferior
+│   ├── data/                  # Datos estáticos de rutinas
+│   │   └── routines.ts        # Definición de rutinas del Protocolo McGill
 │   ├── screens/               # Pantallas de la aplicación
 │   │   ├── CompletedScreen.tsx # Pantalla de ejercicio completado y registro de dolor
 │   │   ├── ExerciseScreen.tsx # Pantalla de ejecución de ejercicio con temporizador circular
@@ -62,16 +66,17 @@ backcare/
 │   │   ├── OnboardingScreen.tsx # Pantalla de bienvenida
 │   │   ├── ProfileScreen.tsx  # Perfil del usuario
 │   │   ├── ProgressScreen.tsx # Seguimiento del progreso
-│   │   ├── RestScreen.tsx     # Pantalla de descanso entre series
 │   │   └── RoutineDetailScreen.tsx # Detalles de rutina (pasa datos vía Base64 en URL)
-    ├───services/              # Servicios y lógica de negocio
-    │   ├───firebase.ts        # Configuración y funciones de Firebase
-    │   └───storage.ts         # Servicio de persistencia local (localStorage) y lógica de rachas
-    ├───firebase.ts            # Configuración de Firebase
+│   ├── services/              # Servicios y lógica de negocio
+│   │   ├── firebase.ts        # Configuración y funciones de Firebase
+│   │   └── storage.ts         # Servicio de persistencia local (localStorage) y lógica de rachas
+│   ├── firebase.ts            # Configuración de Firebase (raíz de src)
 │   ├── index.css              # Estilos CSS con Tailwind
 │   └── types.ts               # Tipos base para servicios y persistencia
 └── public/                    # Assets estáticos
-    └── images/                # Imágenes locales (Anime y Ejercicios)
+    └── images/                # Imágenes locales
+        ├── anime/             # Personajes de anime (Goku, Naruto)
+        └── exercises/         # Imágenes de ejercicios
 ```
 
 ## Descripción de Componentes
@@ -98,9 +103,10 @@ backcare/
 
 - **ProgressScreen.tsx**: Visualización detallada del progreso del usuario a lo largo del tiempo, mostrando gráficos, estadísticas semanales y hitos alcanzados basándose en los datos persistidos localmente.
 
-- **RestScreen.tsx**: Pantalla de descanso entre series (30s) o ejercicios (60s). Incluye un temporizador, consejos de respiración y previsualización del siguiente ejercicio. Asegura la persistencia del `startTime` durante las transiciones de vuelta a los ejercicios.
-
 - **ProfileScreen.tsx**: Sección de perfil del usuario donde se puede acceder a la información personal, configuración de la cuenta, preferencias y datos de salud relacionados con el programa de cuidado de espalda.
+
+#### data/
+- **routines.ts**: Archivo que contiene la definición estructurada de las rutinas del Protocolo McGill, incluyendo los "3 Grandes de McGill" con sus ejercicios, series, repeticiones e instrucciones detalladas.
 
 ### Otros Archivos Importantes
 
@@ -116,6 +122,7 @@ backcare/
 - **src/firebase.ts**: Configuración de la aplicación Firebase con credenciales desde variables de entorno.
 - **src/services/firebase.ts**: Funciones para interactuar con Firestore, incluyendo operaciones CRUD para rutinas, sesiones y progreso del usuario.
 - **src/services/storage.ts**: Sistema de persistencia local que gestiona el historial de entrenamientos, cálculo automático de rachas (streaks) diarias y estadísticas mensuales sin necesidad de conexión.
+- **src/data/routines.ts**: Definición estática de las rutinas del Protocolo McGill con ejercicios detallados, series, repeticiones e instrucciones para cada uno.
 
 ## Características Principales
 
@@ -182,3 +189,41 @@ Durante la última sesión de desarrollo, se realizaron los siguientes cambios i
 19. **Temas de navegación y estilos**: `BottomNavigation` soporta `NavTheme.Mint` además de púrpura, con animaciones de fondo y texto activos/inactivos.
 
 20. **Modal de confirmación y control de estado**: Se implementó un modal personalizado de salida en `ExerciseScreen.tsx` (`showExitModal`) para reemplazar `window.confirm` y mejorar la experiencia durante un entrenamiento.
+
+21. **Actualización de PROJECT_STRUCTURE.md**: Se corrigió la documentación para reflejar la estructura real del proyecto, eliminando `RestScreen.tsx` (no existe), agregando `src/data/routines.ts` y detallando las subcarpetas de imágenes.
+
+22. **Eliminación de RestScreen.tsx**: La pantalla de descanso fue removida del proyecto y de la documentación. Las transiciones entre ejercicios se manejan directamente en `ExerciseScreen.tsx`.
+
+23. **Agregado de src/data/routines.ts**: Nuevo archivo que centraliza las definiciones de rutinas del Protocolo McGill, separando los datos de la lógica de UI.
+
+24. **Consolidación de estructura de imágenes**: Se documentaron las subcarpetas `/public/images/anime/` (personajes) y `/public/images/exercises/` (ejercicios).
+
+25. **Internacionalización - Traducción completa al español**: Se tradujo todo el texto visible en la interfaz de usuario de inglés a español:
+    - `HomeScreen.tsx`: "BackCare Protocol" → "Protocolo BackCare", "Hello, Hiro!" → "¡Hola, Hiro!", "Phase 1" → "Fase 1", "Streak" → "Racha", "Morning" → "Mañana", "Stretching" → "Estiramientos", "Office" → "Oficina", "Night Recovery" → "Recuperación Nocturna", "Relax" → "Relajación"
+    - `BottomNavigation.tsx`: "Home" → "Inicio", "Progress" → "Progreso", "Profile" → "Perfil"
+    - `ProfileScreen.tsx`: "My Data" → "Mis Datos", "Reminders" → "Recordatorios", "Support" → "Soporte"
+    - `CompletedScreen.tsx`: "Saltar feedback" → "Omitir comentarios"
+    - `RoutineDetailScreen.tsx`: Atributos `alt` traducidos ("User" → "Usuario", "Cover" → "Portada", "Chibi Mascot" → "Mascota Chibi", "Coach" → "Entrenador")
+    - `ProgressScreen.tsx`: Atributos `alt` traducidos ("User profile picture" → "Foto de perfil del usuario", "Mascot character" → "Personaje mascota")
+    - `routines.ts`: "Core" → "Núcleo"
+    - `index.html`: `lang="en"` → `lang="es"`
+
+26. **Implementación completa de Modo Oscuro en toda la aplicación**: Se añadió soporte completo de modo oscuro (`dark:`) con transiciones suaves (`transition-colors duration-300`) en todas las pantallas y componentes:
+    - **index.css**: Agregadas reglas CSS globales para `.dark body` (fondo `#0f172a` con patrón de puntos `#1e293b`), `.dark #root` (fondo `#111827`, borde `#1e293b`), y `.dark .glass-nav` (fondo `rgba(35, 30, 51, 0.85)`)
+    - **BottomNavigation.tsx**: Contenedor con `dark:bg-[#231e33]`, `dark:backdrop-blur-xl`, `dark:border-gray-700`; íconos inactivos con `dark:text-gray-400`
+    - **ProfileScreen.tsx**: Marco de foto con `dark:border-gray-800`, `dark:bg-[#2d2438]`; píldora de nivel con `dark:bg-[#2d2438]`, `dark:border-gray-700`, `dark:text-primary-light`; botón de editar con `dark:border-gray-700`
+    - **ExerciseScreen.tsx**: Fondo escritorio `dark:bg-slate-950`, marco teléfono `dark:bg-[#121826]`, header `dark:bg-[#121826]/95`, botón cerrar `dark:bg-slate-800`, imagen ejercicio `dark:bg-slate-800`, temporizador `dark:bg-slate-800`, footer gradiente `dark:from-[#121826]`, botones `dark:bg-slate-800`, cápsula informativa `dark:bg-slate-800/80`, tarjeta Técnica Correcta `dark:bg-slate-800`, tarjeta Advertencias `dark:bg-rose-950/20`, personaje motivador `dark:bg-slate-800`, modal de salida `dark:bg-slate-800`, `dark:bg-rose-900/20`
+    - **RoutineDetailScreen.tsx**: Header `dark:bg-slate-900/90`, botón volver `dark:bg-gray-800`, badge información `dark:bg-slate-800/90`, tarjeta advertencias `dark:bg-amber-900/20`, lista ejercicios `dark:bg-gray-800`, descripción `dark:bg-gray-800`, frase motivacional `dark:bg-gray-800`, botón comenzar `dark:bg-white/10`
+    - **CompletedScreen.tsx**: Pantalla carga `dark:bg-slate-900`, `dark:text-gray-300`, selectores de dolor `dark:bg-slate-600`, `dark:bg-slate-700`, `dark:text-slate-500`, `dark:bg-primary/20`
+    - **ProgressScreen.tsx**: Patrón de puntos `dark:bg-[radial-gradient(#334155_1px,transparent_1px)]`, marco foto perfil `dark:bg-slate-700`
+    - **HomeScreen.tsx**: Contenedor con `transition-colors duration-300`
+
+27. **Paleta de colores oscuros estandarizada**: Se estableció una paleta consistente para el modo oscuro en toda la aplicación:
+    - Fondos principales: `dark:bg-slate-900`, `dark:bg-slate-950`, `dark:bg-background-dark`
+    - Fondos de teléfono/tarjetas: `dark:bg-[#121826]`, `dark:bg-[#1a2c27]`, `dark:bg-[#231e33]`, `dark:bg-slate-800`, `dark:bg-gray-800`, `dark:bg-[#2f453e]`, `dark:bg-[#2d2438]`
+    - Bordes: `dark:border-slate-700`, `dark:border-gray-700`, `dark:border-slate-800`, `dark:border-slate-600`
+    - Texto principal: `dark:text-white`, `dark:text-gray-100`, `dark:text-gray-200`
+    - Texto secundario: `dark:text-gray-300`, `dark:text-gray-400`, `dark:text-slate-500`
+    - Colores semánticos: `dark:bg-rose-950/20`, `dark:bg-amber-900/20`, `dark:bg-purple-900/30`, `dark:bg-pink-900/20`, `dark:text-rose-400`, `dark:text-teal-400`, `dark:text-primary-light`
+
+28. **Verificación exhaustiva de consistencia**: Se realizó un rastreo completo de todos los elementos `bg-white` y `text-white` en la aplicación para asegurar que cada uno tenga su contraparte oscura correspondiente. Todos los elementos ahora tienen transiciones suaves entre temas.

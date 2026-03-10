@@ -178,8 +178,8 @@ const CompletedScreen: React.FC = () => {
 
   if (!routineData) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background-light">
-        <p className="text-lg">Cargando...</p>
+      <div className="flex items-center justify-center min-h-screen bg-background-light dark:bg-slate-900">
+        <p className="text-lg text-gray-600 dark:text-gray-300">Cargando...</p>
       </div>
     );
   }
@@ -215,9 +215,9 @@ const CompletedScreen: React.FC = () => {
           <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold tracking-wide uppercase opacity-80">{routineData.name}</p>
         </div>
 
-        {/* CONTENIDO ESTADÍSTICAS Y DOLOR (Se mantiene igual) */}
+        {/* CONTENIDO ESTADÍSTICAS Y DOLOR */}
         <div className="px-5 pt-6 pb-32 flex flex-col gap-8 bg-background-light dark:bg-[#1a2c27]">
-          {/* Tarjetas de tiempo, ejercicios y series... */}
+          {/* Tarjetas de tiempo, ejercicios y series */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white dark:bg-[#2f453e] p-3 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-card border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
@@ -255,7 +255,7 @@ const CompletedScreen: React.FC = () => {
           <div className="flex flex-col gap-3">
              <div className="flex justify-between items-end px-1">
                 <h2 className="text-slate-800 dark:text-slate-100 font-bold text-base flex items-center gap-2 font-cute">
-                   <span className="w-2 h-2 rounded-full bg-slate-300 ring-4 ring-slate-100 dark:ring-slate-800"></span> Dolor Inicial
+                   <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 ring-4 ring-slate-100 dark:ring-slate-800"></span> Dolor Inicial
                 </h2>
                 <span className="text-xs font-bold bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 text-slate-500 dark:text-slate-300 px-3 py-1 rounded-full">{painLabels[startPainLevel]}</span>
              </div>
@@ -264,7 +264,7 @@ const CompletedScreen: React.FC = () => {
                    {painEmojis.map((emoji, idx) => (
                       <button key={idx} onClick={() => setStartPainLevel(idx)} className={`flex flex-col items-center gap-1 focus:outline-none transition-all ${idx === startPainLevel ? 'transform scale-125' : 'opacity-50 hover:opacity-100'}`}>
                          <span className="text-2xl">{emoji}</span>
-                         <span className="text-[10px] font-bold text-slate-400">{idx}</span>
+                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">{idx}</span>
                          {idx === startPainLevel && <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)]"></div>}
                       </button>
                    ))}
@@ -279,9 +279,9 @@ const CompletedScreen: React.FC = () => {
                    <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(43,238,189,0.8)] ring-4 ring-primary/20"></span> Dolor Actual
                 </h2>
                 {painLevel !== null ? (
-                  <span className="text-xs font-bold bg-primary/10 text-emerald-600 dark:text-primary px-3 py-1 rounded-full border border-primary/20">{painLabels[painLevel]}</span>
+                  <span className="text-xs font-bold bg-primary/10 dark:bg-primary/20 text-emerald-600 dark:text-primary px-3 py-1 rounded-full border border-primary/20">{painLabels[painLevel]}</span>
                 ) : (
-                  <span className="text-xs font-bold bg-primary/10 text-emerald-600 dark:text-primary px-3 py-1 rounded-full border border-primary/20 animate-pulse">Selecciona</span>
+                  <span className="text-xs font-bold bg-primary/10 dark:bg-primary/20 text-emerald-600 dark:text-primary px-3 py-1 rounded-full border border-primary/20 animate-pulse">Selecciona</span>
                 )}
              </div>
              <div className="bg-white dark:bg-[#2f453e] p-4 rounded-2xl shadow-sm border border-primary/30 dark:border-primary/20 overflow-x-auto no-scrollbar ring-2 ring-primary/10">
@@ -289,7 +289,7 @@ const CompletedScreen: React.FC = () => {
                    {painEmojis.map((emoji, idx) => (
                       <button key={idx} onClick={() => setPainLevel(idx)} className={`flex flex-col items-center gap-1 focus:outline-none transition-all ${idx === painLevel ? 'transform scale-125' : 'opacity-50 hover:opacity-100'}`}>
                          <span className="text-2xl">{emoji}</span>
-                         <span className="text-[10px] font-bold text-slate-400">{idx}</span>
+                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">{idx}</span>
                          {idx === painLevel && <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(43,238,189,0.8)]"></div>}
                       </button>
                    ))}
@@ -330,12 +330,12 @@ const CompletedScreen: React.FC = () => {
               {!isSaving && <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform relative z-10">arrow_forward</span>}
            </button>
            
-           <button 
+           <button
              onClick={handleSkipFeedback} 
              disabled={isSaving}
              className="text-center text-sm font-semibold text-slate-400 hover:text-primary transition-colors cursor-pointer"
            >
-              Saltar feedback
+              Omitir comentarios
            </button>
         </div>
       </div>
