@@ -7,7 +7,6 @@ import ExerciseScreen from '@/screens/ExerciseScreen';
 import CompletedScreen from '@/screens/CompletedScreen';
 import ProgressScreen from '@/screens/ProgressScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
-import RestScreen from '@/screens/RestScreen';
 
 const App: React.FC = () => {
   return (
@@ -19,7 +18,6 @@ const App: React.FC = () => {
         <Route path="/routine/:id" element={<RoutineDetailScreen />} />
         <Route path="/exercise/:data" element={<ExerciseScreen />} />
         <Route path="/completed/:id" element={<CompletedScreen />} />
-        <Route path="/rest/:id" element={<RestScreen />} />
         <Route path="/progress" element={<ProgressScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="*" element={<Navigate to="/home" replace />} />

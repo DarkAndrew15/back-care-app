@@ -8,16 +8,16 @@ const ProgressScreen: React.FC = () => {
   const days = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
 
   useEffect(() => {
-    const handleStorageChange = () => {
+    const handleFocusChange = () => {
       setProgress(getUserProgress());
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleStorageChange);
+    // ✅ FIX: Eliminamos el evento 'storage' inútil en SPA y dejamos solo 'focus' 
+    // para actualizar cuando el usuario vuelve a la app desde otra aplicación del celular.
+    window.addEventListener('focus', handleFocusChange);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleStorageChange);
+      window.removeEventListener('focus', handleFocusChange);
     };
   }, []);
 
@@ -115,7 +115,7 @@ const ProgressScreen: React.FC = () => {
                   <span className="material-symbols-outlined text-purple-400 text-3xl">timer</span>
                 </div>
                 <div className="text-center">
-                  <p className="text-gray-900 dark:text-white text-xl font-bold">{progress.totalDuration}m</p>
+                  <p className="text-gray-900 dark:text-white text-xl font-bold">{Math.round(progress.totalDuration / 60)}m</p>
                   <p className="text-gray-400 text-xs font-medium">Tiempo total</p>
                 </div>
               </div>

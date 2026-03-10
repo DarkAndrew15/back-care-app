@@ -16,7 +16,7 @@ export interface WorkoutSession {
 
 export interface UserProgress {
   totalSessions: number;
-  totalDuration: number; // en minutos
+  totalDuration: number; // en segundos (ANTES ERA MINUTOS)
   currentStreak: number;
   longestStreak: number;
   lastWorkoutDate: string | null;
@@ -53,7 +53,7 @@ export const saveWorkoutSession = (session: WorkoutSession): void => {
     
     progress.sessionsHistory.push(session);
     progress.totalSessions += 1;
-    progress.totalDuration += Math.round(session.duration / 60);
+    progress.totalDuration += session.duration;
 
     // ✅ FIX: Obtener fecha YYYY-MM-DD basada en la zona horaria LOCAL del usuario, no en UTC
     const now = new Date();
@@ -71,8 +71,9 @@ export const saveWorkoutSession = (session: WorkoutSession): void => {
       // ✅ FIX: Añadimos 'T00:00:00' para evitar que JS intente convertirlo nuevamente a UTC al parsear
       const lastDate = new Date(`${lastWorkout}T00:00:00`);
       const todayDate = new Date(`${today}T00:00:00`);
-      const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-      
+      // CAMBIO CLAVE: Math.round en lugar de Math.floor para evitar que un día de 23 horas (por DST) cuente como 0 días
+      const diffDays = Math.round((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
       if (diffDays === 0) {
         // Mismo día, no suma racha extra
       } else if (diffDays === 1) {

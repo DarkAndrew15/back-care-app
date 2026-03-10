@@ -82,7 +82,8 @@ const CompletedScreen: React.FC = () => {
         id: Date.now().toString(),
         routineId: routineData.id,
         routineName: routineData.name,
-        date: new Date().toISOString(),
+        // ✅ FIX: Obtenemos el timestamp en formato ISO pero ajustado a la zona horaria LOCAL del dispositivo
+        date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString(),
         duration: duration,
         exercisesCompleted: totalExercises,
         totalExercises: totalExercises,
@@ -92,25 +93,34 @@ const CompletedScreen: React.FC = () => {
         painLevelAfter: painLevel
       });
 
-      // 2. Guardado en Firestore (Nube)
+      // 2. Guardado en Firestore (Nube) con Timeout de 5 segundos
       try {
-        await saveSession({
-          userId: 'user-admin', // ID fijo por ahora al no tener Login
+        const firebaseCall = saveSession({
+          userId: 'user-admin', 
           routineId: routineData.id,
           routineName: routineData.name,
-          duration: duration,
+          totalDuration: duration,
           painBefore: startPainLevel,
           painAfter: painLevel,
           notes: notes,
           completed: true,
           exercisesCompleted: totalExercises,
-          setsCompleted: totalSets
-        } as any); // "as any" nos protege por si tu interface en types.ts es ligeramente distinta
-        console.log("✅ Sesión guardada en Firebase exitosamente");
+          setsCompleted: totalSets,
+          date: new Date().toISOString()
+        });
+
+        // Cronómetro de 5 segundos
+        const timeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Firebase timeout: Red lenta')), 5000)
+        );
+
+        // Ponemos a competir la llamada de Firebase contra el cronómetro
+        await Promise.race([firebaseCall, timeout]);
+        console.log("✅ Sesión en Firebase completada o en cola");
+
       } catch (error) {
-        console.error('❌ Error al guardar en Firebase:', error);
-        // Aunque falle Firebase (ej. sin internet), dejamos que el usuario avance
-        // porque ya se guardó localmente.
+        console.warn('⚠️ No se pudo sincronizar en la nube a tiempo, pero el progreso local está a salvo:', error);
+        // No lanzamos alert() para no asustar al usuario, su racha local ya se guardó.
       }
 
       setIsSaving(false);
@@ -131,7 +141,8 @@ const CompletedScreen: React.FC = () => {
         id: Date.now().toString(),
         routineId: routineData.id,
         routineName: routineData.name,
-        date: new Date().toISOString(),
+        // ✅ FIX: Obtenemos el timestamp en formato ISO pero ajustado a la zona horaria LOCAL del dispositivo
+        date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString(),
         duration: duration,
         exercisesCompleted: totalExercises,
         totalExercises: totalExercises,
@@ -140,17 +151,25 @@ const CompletedScreen: React.FC = () => {
       });
 
       try {
-        await saveSession({
+        const firebaseCall = saveSession({
           userId: 'user-admin',
           routineId: routineData.id,
           routineName: routineData.name,
-          duration: duration,
+          totalDuration: duration,
           completed: true,
           exercisesCompleted: totalExercises,
-          setsCompleted: totalSets
-        } as any);
+          setsCompleted: totalSets,
+          date: new Date().toISOString()
+        });
+
+        const timeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Firebase timeout: Red lenta')), 5000)
+        );
+
+        await Promise.race([firebaseCall, timeout]);
+
       } catch (error) {
-         console.error('❌ Error al guardar en Firebase:', error);
+         console.warn('⚠️ Error o timeout al guardar en Firebase al saltar feedback:', error);
       }
     }
     setIsSaving(false);

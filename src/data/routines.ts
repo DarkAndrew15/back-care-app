@@ -11,103 +11,93 @@ export const routinesData = {
     image: '/images/anime/GokuBannerEjercicioPiso.png',
     exercises: [
       {
-        id: 'curl-up',
-        name: 'Curl-Up Modificado',
-        target: 'RECTO ABDOMINAL (CORE ANTERIOR)',
+        id: 'mcgill-1',
+        name: 'Curl-Up (Abdominal Modificado)',
+        target: 'Core',
+        duration: 300,
         sets: 3,
-        reps: 5,
-        hold: '10s',
-        repsOrDuration: '5 reps × 10s',
-        description: 'Crea una "faja" frontal protectora sin doblar la columna vertebral',
+        reps: 9,
+        hold: 10,
+        repsOrDuration: 'Pirámide 5-3-1',
+        description: 'Protege la columna mientras fortalece la pared abdominal anterior.',
         image: '/images/exercises/curl-up.jpg',
         avatar: '/images/exercises/curl-up.jpg',
         instructions: [
-          'Túmbate boca arriba. Una pierna estirada, la otra doblada (esto bloquea la pelvis para que no te duela)',
-          'Pon tus manos debajo de tu zona lumbar para mantener el arco natural',
-          'Levanta solo la cabeza y los hombros unos centímetros del suelo',
-          'Aguanta 10 segundos manteniendo la tensión en el abdomen',
-          'Baja controladamente y descansa entre repeticiones'
+          'Acuéstate boca arriba, flexiona una rodilla y estira la otra pierna.',
+          'Coloca tus manos debajo de la zona lumbar para mantener su curva natural.',
+          'Levanta ligeramente la cabeza y los hombros como un bloque rígido.',
+          'Aplica la pirámide descendente: Serie 1 (5 reps), Serie 2 (3 reps), Serie 3 (1 rep).',
+          'Mantén cada repetición rígida por 10 segundos y luego baja lentamente.'
         ],
         warnings: [
-          'NO aplastes la espalda contra el suelo - mantén siempre el arco lumbar',
-          'El movimiento debe ser mínimo (pocos centímetros) para proteger tu espalda',
-          'Si sientes dolor agudo en la zona lumbar, detente inmediatamente'
+          'DOBLA LA RODILLA DEL LADO MÁS SENSIBLE (si tienes dolor de un solo lado). Si no, altérnalas en cada serie.',
+          'No flexiones el cuello ni empujes la barbilla hacia el pecho.',
+          'El movimiento debe ser mínimo, no es un "crunch" tradicional.'
         ],
         tips: [
-          'Imagina que estás endureciendo el abdomen para recibir un golpe',
-          'La barbilla debe ir ligeramente hacia el pecho',
-          'Respira normalmente durante el aguante, no contengas la respiración'
+          'Imagina que tu cabeza y hombros están sobre una báscula y solo quieres quitarles el peso.'
         ],
-        why: 'Crea una "faja" frontal sin doblar la columna. Activa el músculo recto abdominal sin movimiento dañino, proporcionando estabilidad anterior a tu espalda baja y protegiendo el disco lesionado.',
-        rest: 'Descansa 3-5 segundos entre cada repetición. Descansa 30-45 segundos entre series.'
+        why: 'A diferencia de los abdominales tradicionales que aplastan los discos lumbares, el Curl-Up activa el recto abdominal sin flexionar la columna.',
+        rest: 'Micro-pausas de 3s. 30s de descanso entre series.'
       },
       {
-        id: 'side-plank',
-        name: 'Puente Lateral (Side Plank)',
-        target: 'CUADRADO LUMBAR Y OBLICUOS',
+        id: 'mcgill-2',
+        name: 'Plancha Lateral (Side Plank)',
+        target: 'Oblicuos',
+        duration: 300,
         sets: 3,
-        reps: 'Por cada lado',
-        hold: '10s',
-        repsOrDuration: '10s × cada lado',
-        description: 'Fortalece el músculo que estabiliza tu zona de dolor pulsátil',
+        reps: 9, // Mantenemos 9 para la lógica 5-3-1
+        hold: 10,
+        repsOrDuration: 'Pirámide 5-3-1',
+        description: 'El mejor ejercicio para los oblicuos y el cuadrado lumbar, esenciales para la estabilidad lateral.',
         image: '/images/exercises/side-plank.jpg',
         avatar: '/images/exercises/side-plank.jpg',
         instructions: [
-          'Túmbate de lado apoyado en el codo y las rodillas (versión fácil para Fase 1)',
-          'Levanta la cadera para que tu cuerpo forme una línea recta',
-          'El brazo libre ponlo sobre el hombro contrario',
-          'Aguanta 10 segundos manteniendo la estabilidad sin balancearte',
-          'Baja controladamente, cambia de lado y repite'
+          'Acuéstate de lado apoyándote sobre tu antebrazo y rodillas (o pies).',
+          'Eleva las caderas hasta formar una línea recta desde la cabeza hasta las rodillas/pies.',
+          'Aplica la pirámide por CADA LADO: Serie 1 (5 reps), Serie 2 (3 reps), Serie 3 (1 rep).',
+          'Mantén la postura rígida por 10 segundos en cada repetición.'
         ],
         warnings: [
-          'Mantén el cuerpo en línea recta para evitar compensaciones',
-          'NO dejes caer la cadera hacia el suelo',
-          'Si es muy difícil, mantén las rodillas apoyadas todo el tiempo',
-          'No contengas la respiración - respira normalmente'
+          'EMPIEZA SIEMPRE POR TU LADO SIN DOLOR. Luego pasa al lado más sensible.',
+          'No dejes que las caderas caigan hacia el suelo.',
+          'Evita rotar el torso; mantén el pecho mirando hacia adelante.'
         ],
         tips: [
-          'Imagina que te empujan desde arriba y resistes con el core',
-          'Contrae el abdomen y glúteos para mayor estabilidad',
-          'Mira hacia adelante, no hacia abajo',
-          'Si sientes temblor es normal - es la activación muscular'
+          'Aprieta los glúteos y el abdomen como si fueras a recibir un golpe.'
         ],
-        why: 'Este ejercicio fortalece el Cuadrado Lumbar, el músculo principal que estabiliza tu zona de dolor (encima de la pelvis) y evita que las vértebras se deslicen. Es VITAL para tu dolor "pulsátil" ya que previene el movimiento lateral no deseado.',
-        rest: 'Descansa 5 segundos al cambiar de lado. Descansa 30-45 segundos entre series.'
+        why: 'Crea una "faja" muscular natural que previene que la columna se doble hacia los lados bajo carga, protegiendo los nervios espinales.',
+        rest: 'Micro-pausas de 3s. 30s de descanso entre series.'
       },
       {
-        id: 'bird-dog',
-        name: 'Pájaro-Perro (Bird-Dog)',
-        target: 'MULTÍFIDOS Y CADENA POSTERIOR',
+        id: 'mcgill-3',
+        name: 'Bird-Dog (Perro-Pájaro)',
+        target: 'Espalda Baja',
+        duration: 300,
         sets: 3,
-        reps: 5,
-        hold: '8-10s',
-        repsOrDuration: '5 reps × 8-10s por lado',
-        description: 'Activa músculos profundos de la columna sin carga compresiva',
+        reps: 9,
+        hold: 10,
+        repsOrDuration: 'Pirámide 5-3-1',
+        description: 'Desarrolla la musculatura extensora de la espalda de forma segura.',
         image: '/images/exercises/bird-dog.jpg',
         avatar: '/images/exercises/bird-dog.jpg',
         instructions: [
-          'Colócate en cuatro patas (posición de cuadrupedia): manos bajo hombros, rodillas bajo caderas',
-          'Estira una pierna hacia atrás y el brazo contrario hacia adelante simultáneamente',
-          '¡OJO! NO busques altura, busca LONGITUD. Imagina que quieres tocar la pared de enfrente y la de atrás',
-          'Mantén la espalda como una mesa completamente inmóvil (sin arquear ni rotar)',
-          'Cierra el puño fuerte para activar más músculos de la cadena',
-          'Aguanta 8-10 segundos y regresa controladamente',
-          'Cambia de lado (pierna contraria y brazo contrario)'
+          'Ponte en cuadrupedia (manos debajo de los hombros, rodillas debajo de las caderas).',
+          'Extiende simultáneamente el brazo derecho y la pierna izquierda.',
+          'Aplica la pirámide por CADA LADO: Serie 1 (5 reps), Serie 2 (3 reps), Serie 3 (1 rep).',
+          'Mantén la postura por 10 segundos, sintiendo la contracción en la espalda baja y glúteos.'
         ],
         warnings: [
-          'NO arquees la espalda buscando altura del brazo o pierna',
-          'Mantén la columna neutral como una tabla en todo momento',
-          'El movimiento debe ser lento y extremadamente controlado',
-          'NO permitas rotación de caderas o hombros'
+          'EMPIEZA SIEMPRE POR TU LADO SIN DOLOR. Luego pasa al lado más sensible.',
+          'No levantes la pierna más arriba de la cadera para evitar arquear la zona lumbar.',
+          'No permitas que tu torso se tambalee de lado a lado.'
         ],
         tips: [
-          'Imagina balancear un vaso de agua en tu espalda baja sin derramarlo',
-          'El movimiento debe sentirse como estiramiento, no como elevación',
-          'Respira normalmente, no aguantes la respiración',
-          'Enfócate en la estabilidad, no en llegar más lejos'
+          'Imagina que tienes un vaso de agua en la espalda baja y no puedes derramarlo.',
+          'Empuja el suelo con la mano de apoyo para estabilizar el hombro.'
         ],
-        why: 'Activa los multífidos (músculos profundos de la columna vertebral) sin poner carga compresiva peligrosa. Enseña a tu espalda a mantenerse estable mientras tus extremidades se mueven, exactamente lo que necesitas hacer en el trabajo de bodega cargando cajas.',
-        rest: 'Descansa 3-5 segundos entre cada lado. Descansa 45-60 segundos entre series.'
+        why: 'Activa los multífidos y erectores espinales (músculos de la espalda baja) con una compresión mínima sobre la columna vertebral.',
+        rest: 'Micro-pausas de 3s. 30s de descanso entre series.'
       }
     ]
   },

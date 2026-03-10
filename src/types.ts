@@ -32,13 +32,16 @@ export interface Session {
   id?: string;
   userId: string;
   routineId: string;
+  routineName: string; // Faltaba en tu interfaz original
   date: string;
   completed: boolean;
-  exercises: ExerciseProgress[];
+  exercises?: ExerciseProgress[]; // Lo hacemos opcional por ahora
   totalDuration: number; // en segundos
-  painBefore: number;
-  painAfter: number;
+  painBefore?: number; // Opcional, para cuando usan "Saltar feedback"
+  painAfter?: number; // Opcional
   notes?: string;
+  exercisesCompleted: number; // Faltaba
+  setsCompleted: number; // Faltaba
 }
 
 export interface UserProgress {

@@ -9,17 +9,16 @@ const HomeScreen: React.FC = () => {
   const [progress, setProgress] = useState(getUserProgress());
 
   useEffect(() => {
-    const handleStorageChange = () => {
+    const handleFocusChange = () => {
       setProgress(getUserProgress());
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    // También actualizar cuando el componente se enfoca (opcional pero útil)
-    window.addEventListener('focus', handleStorageChange);
+    // ✅ FIX: Eliminamos el evento 'storage' inútil en SPA y dejamos solo 'focus' 
+    // para actualizar cuando el usuario vuelve a la app desde otra aplicación del celular.
+    window.addEventListener('focus', handleFocusChange);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleStorageChange);
+      window.removeEventListener('focus', handleFocusChange);
     };
   }, []);
 
@@ -73,7 +72,7 @@ const HomeScreen: React.FC = () => {
             </div>
             <div className="flex items-center gap-1">
               <span className="material-symbols-outlined text-[16px] text-purple-main">timer</span>
-              <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{progress.totalDuration}m Total</span>
+              <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{Math.round(progress.totalDuration / 60)}m Total</span>
             </div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Keep going, your back is healing!</p>

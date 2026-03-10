@@ -1,5 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+
+// Función helper para calcular repeticiones por serie (Pirámide McGill 5-3-1)
+const getTargetRepsForSet = (totalReps: number | undefined, currentSet: number) => {
+  if (!totalReps) return 0;
+  
+  // Lógica específica para la Pirámide del protocolo McGill (9 reps totales en 3 series)
+  if (totalReps === 9) {
+    if (currentSet === 1) return 5;
+    if (currentSet === 2) return 3;
+    if (currentSet === 3) return 1;
+  }
+  
+  // Para rutinas estándar, asume que 'reps' es por serie
+  return totalReps; 
+};
 
 interface Exercise {
   id: string;
@@ -7,7 +22,7 @@ interface Exercise {
   target: string;
   sets: number;
   reps: number | string;
-  hold: string;
+  hold: number | string;
   repsOrDuration: string;
   description: string;
   image: string;
@@ -17,6 +32,7 @@ interface Exercise {
   tips?: string[];
   why: string;
   rest: string;
+  duration?: number;
 }
 
 interface RoutineData {
@@ -35,7 +51,7 @@ const ExerciseScreen: React.FC = () => {
   // ✅ 1. Timer inicia en PAUSA (isActive = false)
   const [timeLeft, setTimeLeft] = useState(10);
   const [isActive, setIsActive] = useState(false); // ← CAMBIADO A FALSE
-  const totalTime = 10;
+  const [totalTime, setTotalTime] = useState(10);
 
   // ✅ 2. Estado para pantalla de descanso
   const [isResting, setIsResting] = useState(false);
@@ -49,6 +65,241 @@ const ExerciseScreen: React.FC = () => {
   const [currentRep, setCurrentRep] = useState(1);
   const [currentSide, setCurrentSide] = useState<'left' | 'right'>('right');
   const [showExitModal, setShowExitModal] = useState(false);
+
+  // Refs para acceder a los valores más recientes sin causar re-renders
+  const routineDataRef = useRef<RoutineData | null>(null);
+  const currentExerciseIndexRef = useRef(0);
+  const currentSetRef = useRef(1);
+  const currentRepRef = useRef(1);
+  const currentSideRef = useRef<'left' | 'right'>('right');
+  const pendingNextExerciseRef = useRef(false);
+
+  // Actualizar refs cuando cambian los estados
+  useEffect(() => {
+    routineDataRef.current = routineData;
+  }, [routineData]);
+
+  useEffect(() => {
+    currentExerciseIndexRef.current = currentExerciseIndex;
+  }, [currentExerciseIndex]);
+
+  useEffect(() => {
+    currentSetRef.current = currentSet;
+  }, [currentSet]);
+
+  useEffect(() => {
+    currentRepRef.current = currentRep;
+  }, [currentRep]);
+
+  useEffect(() => {
+    currentSideRef.current = currentSide;
+  }, [currentSide]);
+
+  useEffect(() => {
+    pendingNextExerciseRef.current = pendingNextExercise;
+  }, [pendingNextExercise]);
+
+  // ✅ Función para iniciar descanso
+  const startRest = (duration: number) => {
+    setIsResting(true);
+    setRestTime(duration);
+    setRestTotalTime(duration);
+    setIsActive(true); // Auto-iniciar el descanso
+  };
+
+  const handleComplete = useCallback(() => {
+    const endTime = Date.now();
+    const duration = Math.floor((endTime - routineDataRef.current!.startTime) / 1000);
+
+    // Preparar los mismos datos completos para la pantalla de finalización
+    const finalData = {
+      ...routineDataRef.current!,
+      duration: duration // Añadimos la duración real calculada
+    };
+
+    try {
+      // Codificación segura con encodeURIComponent para evitar problemas con tildes y caracteres especiales
+      const encodedData = btoa(encodeURIComponent(JSON.stringify(finalData)));
+      navigate(`/completed/${encodedData}`);
+    } catch (error) {
+      console.error('❌ Error al codificar datos para CompletedScreen:', error);
+      // Fallback por si acaso
+      const fallbackEncoded = btoa(JSON.stringify(finalData));
+      navigate(`/completed/${fallbackEncoded}`);
+    }
+  }, [navigate]);
+
+  // ✅ Función para terminar descanso
+  const finishRest = useCallback(() => {
+    setIsResting(false);
+    setIsActive(false);
+
+    if (pendingNextExerciseRef.current) {
+      // Primero mover al siguiente ejercicio, luego actualizar el tiempo
+      setCurrentExerciseIndex(prev => prev + 1);
+      setCurrentSet(1);
+      setCurrentRep(1);
+      setCurrentSide('right');
+      setPendingNextExercise(false);
+      // El useEffect que escucha currentExerciseIndex actualizará totalTime automáticamente
+    } else {
+      // Actualizar totalTime al del ejercicio actual después del descanso
+      if (routineDataRef.current && routineDataRef.current.exercises[currentExerciseIndexRef.current]) {
+        const exercise = routineDataRef.current.exercises[currentExerciseIndexRef.current];
+        const holdTime = typeof exercise.hold === 'number' ? exercise.hold : 10;
+        setTotalTime(holdTime);
+        setTimeLeft(holdTime);
+      }
+    }
+  }, []);
+
+  const handleNext = useCallback(() => {
+    const exercise = routineDataRef.current?.exercises[currentExerciseIndexRef.current];
+    if (!exercise) return;
+
+    const repsCount = getTargetRepsForSet(exercise.reps as number, currentSetRef.current);
+
+    // ✅ Manejo para McGill Big 3 (mcgill-1, mcgill-2, mcgill-3)
+    if (exercise.id.startsWith('mcgill-')) {
+      // mcgill-2 (Plancha Lateral) y mcgill-3 (Bird-Dog) tienen lados
+      const hasSides = exercise.id === 'mcgill-2' || exercise.id === 'mcgill-3';
+
+      if (hasSides) {
+        if (currentSideRef.current === 'right') {
+          // --- LADO 1 (Derecho) ---
+          if (currentRepRef.current < repsCount) {
+            // Siguiente repetición del mismo lado: Micro-pausa de 3s
+            startRest(3); 
+            setCurrentRep(prev => prev + 1);
+          } else {
+            // Terminó todas las reps del Lado 1, cambiar a Lado 2
+            // "Cambio de lado inmediato" - Damos 3s para darse la vuelta físicamente
+            startRest(3); 
+            setCurrentSide('left');
+            setCurrentRep(1); 
+          }
+        } else {
+          // --- LADO 2 (Izquierdo) ---
+          if (currentRepRef.current < repsCount) {
+            // Siguiente repetición del mismo lado: Micro-pausa de 3s
+            startRest(3);
+            setCurrentRep(prev => prev + 1);
+          } else {
+            // Terminó todas las reps del Lado 2
+            if (currentSetRef.current < exercise.sets) {
+              // Nueva serie: Descanso de 30s (aplicable a mcgill-2 y mcgill-3)
+              startRest(30); 
+              setCurrentSet(prev => prev + 1);
+              setCurrentSide('right');
+              setCurrentRep(1);
+            } else {
+              // Ejercicio completo (Serie 3 finalizada)
+              if (currentExerciseIndexRef.current < routineDataRef.current.exercises.length - 1) {
+                // Descanso antes del SIGUIENTE ejercicio de la rutina
+                startRest(60); 
+                setPendingNextExercise(true);
+              } else {
+                handleComplete();
+              }
+            }
+          }
+        }
+      } else {
+        // mcgill-1 (Curl-Up) - sin lados
+        if (currentRepRef.current < repsCount) {
+          // Siguiente repetición, descanso corto (3-5s)
+          startRest(5);
+          setCurrentRep(prev => prev + 1);
+        } else {
+          if (currentSetRef.current < exercise.sets) {
+            // Nueva serie, descanso entre series (30s)
+            startRest(30);
+            setCurrentSet(prev => prev + 1);
+            setCurrentRep(1);
+          } else {
+            // Ejercicio completo, descanso entre ejercicios (60s)
+            if (currentExerciseIndexRef.current < routineDataRef.current.exercises.length - 1) {
+              startRest(60);
+              setPendingNextExercise(true);
+            } else {
+              handleComplete();
+            }
+          }
+        }
+      }
+    }
+    // ✅ Manejo legacy para side-plank (mantener compatibilidad)
+    else if (exercise.id === 'side-plank') {
+      if (currentSideRef.current === 'right') {
+        // Cambiar a lado izquierdo, descanso corto (5s)
+        startRest(5);
+        setCurrentSide('left');
+      } else {
+        if (currentSetRef.current < exercise.sets) {
+          // Nueva serie, descanso entre series (30s)
+          startRest(30);
+          setCurrentSet(prev => prev + 1);
+          setCurrentSide('right');
+        } else {
+          // Ejercicio completo, descanso entre ejercicios (45s)
+          if (currentExerciseIndexRef.current < routineDataRef.current.exercises.length - 1) {
+            startRest(45);
+            setPendingNextExercise(true);
+          } else {
+            handleComplete();
+          }
+        }
+      }
+    }
+    // ✅ Manejo legacy para bird-dog (mantener compatibilidad)
+    else if (exercise.id === 'bird-dog') {
+      if (currentRepRef.current < repsCount) {
+        // Siguiente repetición, descanso corto (3-5s)
+        startRest(5);
+        setCurrentRep(prev => prev + 1);
+        setCurrentSide(prev => prev === 'right' ? 'left' : 'right');
+      } else {
+        if (currentSetRef.current < exercise.sets) {
+          // Nueva serie, descanso entre series (45s)
+          startRest(45);
+          setCurrentSet(prev => prev + 1);
+          setCurrentRep(1);
+          setCurrentSide('right');
+        } else {
+          // Ejercicio completo, descanso entre ejercicios (60s)
+          if (currentExerciseIndexRef.current < routineDataRef.current.exercises.length - 1) {
+            startRest(60);
+            setPendingNextExercise(true);
+          } else {
+            handleComplete();
+          }
+        }
+      }
+    }
+    // ✅ Manejo por defecto (Curl-Up y otros)
+    else {
+      if (currentRepRef.current < repsCount) {
+        // Siguiente repetición, descanso corto (3-5s)
+        startRest(5);
+        setCurrentRep(prev => prev + 1);
+      } else {
+        if (currentSetRef.current < exercise.sets) {
+          // Nueva serie, descanso entre series (30s)
+          startRest(30);
+          setCurrentSet(prev => prev + 1);
+          setCurrentRep(1);
+        } else {
+          // Ejercicio completo, descanso entre ejercicios (45s)
+          if (currentExerciseIndexRef.current < routineDataRef.current.exercises.length - 1) {
+            startRest(45);
+            setPendingNextExercise(true);
+          } else {
+            handleComplete();
+          }
+        }
+      }
+    }
+  }, []);
 
   // Decodificar datos
   useEffect(() => {
@@ -75,6 +326,16 @@ const ExerciseScreen: React.FC = () => {
       navigate('/home');
     }
   }, [data, navigate]);
+
+  // ✅ Actualizar totalTime cuando cambia el ejercicio actual
+  useEffect(() => {
+    if (routineData && routineData.exercises[currentExerciseIndex]) {
+      const exercise = routineData.exercises[currentExerciseIndex];
+      const holdTime = typeof exercise.hold === 'number' ? exercise.hold : 10;
+      setTotalTime(holdTime);
+      setTimeLeft(holdTime);
+    }
+  }, [currentExerciseIndex, routineData]);
 
   // ✅ Timer para ejercicio
   useEffect(() => {
@@ -120,7 +381,13 @@ const ExerciseScreen: React.FC = () => {
   const currentExercise = exercises[currentExerciseIndex];
 
   const getRepsCount = (exercise: Exercise): number => {
+    // Para McGill Big 3 (mcgill-1, mcgill-2, mcgill-3), usar pirámide 5-3-1
+    if (exercise.id.startsWith('mcgill-')) {
+      return getTargetRepsForSet(exercise.reps as number, currentSet);
+    }
+    // Para side-plank legacy, retornar 2 lados
     if (exercise.id === 'side-plank') return 2;
+    // Para rutinas estándar, retornar reps por serie
     if (typeof exercise.reps === 'number') return exercise.reps;
     const match = String(exercise.reps).match(/\d+/);
     return match ? parseInt(match[0]) : 5;
@@ -132,7 +399,9 @@ const ExerciseScreen: React.FC = () => {
 
     exercises.forEach((ex, idx) => {
       const repsCount = getRepsCount(ex);
-      const exerciseScreens = ex.sets * repsCount;
+      // Para ejercicios con lados, cada serie tiene 2 * repsCount (ida y vuelta)
+      const hasSides = ex.id === 'mcgill-2' || ex.id === 'mcgill-3' || ex.id === 'side-plank';
+      const exerciseScreens = ex.sets * repsCount * (hasSides ? 2 : 1);
       totalScreens += exerciseScreens;
 
       if (idx < currentExerciseIndex) {
@@ -140,11 +409,25 @@ const ExerciseScreen: React.FC = () => {
       }
     });
 
-    if (currentExerciseIndex < exercises.length) {
+    if (currentExerciseIndex < exercises.length && currentExercise) {
       const currentRepsCount = getRepsCount(currentExercise);
-      completedScreens += (currentSet - 1) * currentRepsCount;
-      
-      if (currentExercise.id === 'side-plank') {
+      const currentHasSides = currentExercise.id.startsWith('mcgill-') &&
+                               (currentExercise.id === 'mcgill-2' || currentExercise.id === 'mcgill-3');
+
+      // Completar series anteriores
+      completedScreens += (currentSet - 1) * currentRepsCount * (currentHasSides ? 2 : 1);
+
+      // ✅ Manejo para McGill Big 3 con lados
+      if (currentHasSides) {
+        // Contar repeticiones completadas del lado derecho
+        completedScreens += (currentRep - 1);
+        // Si está en lado izquierdo, sumar todas las reps del lado derecho + reps del izquierdo
+        if (currentSide === 'left') {
+          completedScreens += currentRepsCount;
+        }
+      }
+      // ✅ Manejo para ejercicios sin lados (mcgill-1 y legacy)
+      else if (currentExercise.id === 'side-plank') {
         if (currentSide === 'left') completedScreens += 1;
       } else {
         completedScreens += (currentRep - 1);
@@ -158,136 +441,38 @@ const ExerciseScreen: React.FC = () => {
     };
   };
 
-  // ✅ Función para iniciar descanso
-  const startRest = (duration: number) => {
-    setIsResting(true);
-    setRestTime(duration);
-    setRestTotalTime(duration);
-    setIsActive(true); // Auto-iniciar el descanso
-  };
-
-  // ✅ Función para terminar descanso
-  const finishRest = () => {
-    setIsResting(false);
-    setIsActive(false);
-    setTimeLeft(totalTime);
-    if (pendingNextExercise) {
-      moveToNextExercise();
-      setPendingNextExercise(false);
-    }
-  };
-
-  const handleNext = () => {
-    const repsCount = getRepsCount(currentExercise);
-
-    if (currentExercise.id === 'side-plank') {
-      if (currentSide === 'right') {
-        // Cambiar a lado izquierdo, descanso corto (5s)
-        startRest(5);
-        setCurrentSide('left');
-      } else {
-        if (currentSet < currentExercise.sets) {
-          // Nueva serie, descanso entre series (30s)
-          startRest(30);
-          setCurrentSet(currentSet + 1);
-          setCurrentSide('right');
-        } else {
-          // Ejercicio completo, descanso entre ejercicios (45s)
-          if (currentExerciseIndex < exercises.length - 1) {
-            startRest(45);
-            setPendingNextExercise(true);
-            moveToNextExercise();
-          } else {
-            handleComplete();
-          }
-        }
-      }
-    } else if (currentExercise.id === 'bird-dog') {
-      if (currentRep < repsCount) {
-        // Siguiente repetición, descanso corto (3-5s)
-        startRest(5);
-        setCurrentRep(currentRep + 1);
-        setCurrentSide(currentSide === 'right' ? 'left' : 'right');
-      } else {
-        if (currentSet < currentExercise.sets) {
-          // Nueva serie, descanso entre series (45s)
-          startRest(45);
-          setCurrentSet(currentSet + 1);
-          setCurrentRep(1);
-          setCurrentSide('right');
-        } else {
-          // Ejercicio completo, descanso entre ejercicios (60s)
-          if (currentExerciseIndex < exercises.length - 1) {
-            startRest(60);
-            setPendingNextExercise(true);
-            moveToNextExercise();
-          } else {
-            handleComplete();
-          }
-        }
-      }
-    } else {
-      // Curl-Up
-      if (currentRep < repsCount) {
-        // Siguiente repetición, descanso corto (3-5s)
-        startRest(5);
-        setCurrentRep(currentRep + 1);
-      } else {
-        if (currentSet < currentExercise.sets) {
-          // Nueva serie, descanso entre series (30s)
-          startRest(30);
-          setCurrentSet(currentSet + 1);
-          setCurrentRep(1);
-        } else {
-          // Ejercicio completo, descanso entre ejercicios (45s)
-          if (currentExerciseIndex < exercises.length - 1) {
-            startRest(45);
-            setPendingNextExercise(true);
-            moveToNextExercise();
-          } else {
-            handleComplete();
-          }
-        }
-      }
-    }
-  };
-
   const moveToNextExercise = () => {
     setCurrentExerciseIndex(currentExerciseIndex + 1);
     setCurrentSet(1);
     setCurrentRep(1);
     setCurrentSide('right');
-  };
-
-  const handleComplete = () => {
-    const endTime = Date.now();
-    const duration = Math.floor((endTime - routineData.startTime) / 1000);
-    
-    // Preparar los mismos datos completos para la pantalla de finalización
-    const finalData = {
-      ...routineData,
-      duration: duration // Añadimos la duración real calculada
-    };
-
-    try {
-      // Codificación segura con encodeURIComponent para evitar problemas con tildes y caracteres especiales
-      const encodedData = btoa(encodeURIComponent(JSON.stringify(finalData)));
-      navigate(`/completed/${encodedData}`);
-    } catch (error) {
-      console.error('❌ Error al codificar datos para CompletedScreen:', error);
-      // Fallback por si acaso
-      const fallbackEncoded = btoa(JSON.stringify(finalData));
-      navigate(`/completed/${fallbackEncoded}`);
-    }
+    // El useEffect que escucha currentExerciseIndex actualizará totalTime automáticamente
   };
 
   const getProgressText = () => {
     const repsCount = getRepsCount(currentExercise);
-    
+
+    // ✅ Manejo para McGill Big 3
+    if (currentExercise.id.startsWith('mcgill-')) {
+      // mcgill-2 (Plancha Lateral) y mcgill-3 (Bird-Dog) tienen lados
+      const hasSides = currentExercise.id === 'mcgill-2' || currentExercise.id === 'mcgill-3';
+
+      if (hasSides) {
+        // ✨ NUEVO: Reflejar instrucción de McGill (Lado 1 y Lado 2)
+        const ladoTexto = currentSide === 'right' ? '1 (Sin dolor)' : '2 (Más sensible)';
+        return `Serie ${currentSet}/${currentExercise.sets} • Rep ${currentRep}/${repsCount} • Lado ${ladoTexto}`;
+      } else {
+        // mcgill-1 (Curl-Up) - sin lados
+        return `Serie ${currentSet}/${currentExercise.sets} • Repetición ${currentRep}/${repsCount}`;
+      }
+    }
+    // ✅ Manejo legacy (manteniendo la misma lógica de lados por si acaso)
     if (currentExercise.id === 'side-plank') {
-      return `Serie ${currentSet}/${currentExercise.sets} • Lado ${currentSide === 'right' ? 'Derecho' : 'Izquierdo'}`;
+      const ladoTexto = currentSide === 'right' ? '1 (Sin dolor)' : '2 (Más sensible)';
+      return `Serie ${currentSet}/${currentExercise.sets} • Lado ${ladoTexto}`;
     } else if (currentExercise.id === 'bird-dog') {
-      return `Serie ${currentSet}/${currentExercise.sets} • Rep ${currentRep}/${repsCount} • ${currentSide === 'right' ? 'Derecho' : 'Izquierdo'}`;
+      const ladoTexto = currentSide === 'right' ? '1 (Sin dolor)' : '2 (Más sensible)';
+      return `Serie ${currentSet}/${currentExercise.sets} • Rep ${currentRep}/${repsCount} • Lado ${ladoTexto}`;
     } else {
       return `Serie ${currentSet}/${currentExercise.sets} • Repetición ${currentRep}/${repsCount}`;
     }
@@ -423,8 +608,15 @@ const ExerciseScreen: React.FC = () => {
               </div>
               
               <div className="bg-rose-50/60 border border-rose-100 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
-                <span className="material-symbols-outlined text-rose-400 mt-0.5">warning</span>
-                <p className="text-xs text-rose-600 font-semibold leading-relaxed">{currentExercise.warnings[0]}</p>
+                <span className="material-symbols-outlined text-rose-400 mt-0.5 shrink-0">warning</span>
+                <div className="flex flex-col gap-2">
+                  {currentExercise.warnings.map((warning, idx) => (
+                    <p key={idx} className="text-xs text-rose-600 font-semibold leading-relaxed">
+                      {currentExercise.warnings.length > 1 && <span className="mr-1">•</span>}
+                      {warning}
+                    </p>
+                  ))}
+                </div>
               </div>
               <div className="h-24"></div>
             </div>
@@ -511,7 +703,7 @@ const ExerciseScreen: React.FC = () => {
                 Cancelar
               </button>
               <button
-                onClick={() => navigate(`/routine/${routineData.id}`)}
+                onClick={() => routineData && navigate(`/routine/${routineData.id}`)}
                 className="flex-1 h-12 rounded-full bg-gradient-to-r from-rose-500 to-red-500 text-white font-semibold hover:from-rose-600 hover:to-red-600 active:scale-95 transition-all shadow-lg shadow-rose-500/30"
               >
                 Salir

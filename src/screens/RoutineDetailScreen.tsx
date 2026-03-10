@@ -131,10 +131,33 @@ const RoutineDetailScreen: React.FC = () => {
 
         <div className="space-y-4">
             {routine.exercises.map((exercise, index) => (
-                <div key={exercise.id} className="bg-white p-3 pr-4 rounded-[20px] flex items-center gap-4 shadow-sm border border-gray-50/50">
+                <button 
+                    key={exercise.id} 
+                    onClick={() => {
+                        // Empaquetamos SOLO este ejercicio como si fuera una rutina de 1 paso
+                        const singleExerciseData = {
+                          id: routine.id, // Mantenemos el ID de la rutina para las estadísticas
+                          name: `Práctica: ${exercise.name}`, // Cambiamos el nombre para distinguirlo
+                          exercises: [exercise], // PASAMOS SOLO ESTE EJERCICIO
+                          currentExerciseIndex: 0,
+                          currentSet: 1,
+                          startTime: Date.now()
+                        };
+
+                        try {
+                          const encodedData = btoa(encodeURIComponent(JSON.stringify(singleExerciseData)));
+                          navigate(`/exercise/${encodedData}`);
+                        } catch (error) {
+                          console.error('❌ Error al codificar datos individuales:', error);
+                          const encodedData = btoa(JSON.stringify(singleExerciseData));
+                          navigate(`/exercise/${encodedData}`);
+                        }
+                    }}
+                    className="w-full text-left bg-white p-3 pr-4 rounded-[20px] flex items-center gap-4 shadow-sm border border-gray-50/50 hover:bg-gray-50 active:scale-[0.98] transition-all cursor-pointer group"
+                >
                     <div className="relative shrink-0">
                          <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden">
-                             <img src={exercise.avatar} alt={exercise.name} className="w-full h-full object-cover" />
+                             <img src={exercise.avatar} alt={exercise.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                          </div>
                          <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-white border-2 border-gray-50 flex items-center justify-center shadow-sm z-10">
                              <span className="text-xs font-bold text-gray-800">{index + 1}</span>
@@ -150,8 +173,10 @@ const RoutineDetailScreen: React.FC = () => {
                         </div>
                     </div>
 
-                    <span className="material-symbols-outlined text-gray-300 text-xl">chevron_right</span>
-                </div>
+                    <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center group-hover:bg-[#1CD6A8] transition-colors">
+                        <span className="material-symbols-outlined text-teal-600 group-hover:text-white text-xl">play_arrow</span>
+                    </div>
+                </button>
             ))}
         </div>
 
