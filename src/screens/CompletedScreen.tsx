@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { saveWorkoutSession } from '../services/storage';
 import { saveSession } from '../services/firebase'; // ✅ IMPORTAMOS FIREBASE
+import { Routine } from '@/types';
+import { useAuth } from '../contexts/AuthContext';
 
-interface DecodedRoutine {
-  id: string;
-  name: string;
-  exercises: any[];
-  startTime?: number;
-  duration?: number; // ✅ NUEVO: Duración real calculada desde ExerciseScreen
-}
+type CompletedRoutine = Routine & { startTime?: number; duration?: number; };
 
 const CompletedScreen: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  // const { id } = useParams<{ id: string }>(); // Ya no usamos URL params
   const navigate = useNavigate();
+  const location = useLocation();
+  const { userId } = useAuth();
   const [painLevel, setPainLevel] = useState<number | null>(null);
   const [startPainLevel, setStartPainLevel] = useState(5);
   const [notes, setNotes] = useState('');
-  const [routineData, setRoutineData] = useState<DecodedRoutine | null>(null);
+  const [routineData, setRoutineData] = useState<CompletedRoutine | null>(null);
   const [duration, setDuration] = useState(0);
 
   // ✅ NUEVO: Estado para saber si estamos guardando en la nube
@@ -27,42 +25,26 @@ const CompletedScreen: React.FC = () => {
   const painLabels = ['Sin dolor', 'Muy leve', 'Leve', 'Molesto', 'Incómodo', 'Moderado', 'Fuerte', 'Muy fuerte', 'Intenso', 'Insoportable'];
 
   useEffect(() => {
-    try {
-      if (id) {
-        // ✅ FIX: Decodificación segura y robusta
-        let decodedData = '';
-        try {
-          // Intentamos decodificar asumiendo que viene con encodeURIComponent (La forma segura)
-          decodedData = decodeURIComponent(atob(id));
-        } catch (e) {
-          // Si falla, es porque venía codificado de la forma antigua (solo btoa)
-          decodedData = atob(id);
-        }
-        
-        const data: DecodedRoutine = JSON.parse(decodedData);
-        setRoutineData(data);
+    if (location.state) {
+      const data = location.state as CompletedRoutine;
+      setRoutineData(data);
 
-        // Si la pantalla anterior ya calculó la duración (como acabamos de programar), la usamos
-        if ((data as any).duration) {
-          setDuration((data as any).duration);
-        } 
-        // Fallbacks de cálculo por si acaso
-        else if (data.startTime) {
-          const elapsed = Math.floor((Date.now() - data.startTime) / 1000);
-          setDuration(elapsed);
-        } else {
-          const estimatedSeconds = data.exercises.reduce((total, ex) => {
-            return total + (ex.sets * 10) + (ex.sets * 30); 
-          }, 0);
-          setDuration(estimatedSeconds);
-        }
+      if (data.duration) {
+        setDuration(data.duration);
+      } else if (data.startTime) {
+        const elapsed = Math.floor((Date.now() - data.startTime) / 1000);
+        setDuration(elapsed);
+      } else {
+        const estimatedSeconds = data.exercises.reduce((total, ex) => {
+          return total + (ex.sets * 10) + (ex.sets * 30); 
+        }, 0);
+        setDuration(estimatedSeconds);
       }
-    } catch (error) {
-      console.error('❌ Error fatal al decodificar la rutina:', error);
-      // Solo en caso de error masivo te mandará al Home
+    } else {
+      console.error('❌ No hay datos de rutina en el estado');
       navigate('/home');
     }
-  }, [id, navigate]);
+  }, [location.state, navigate]);
 
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -80,23 +62,25 @@ const CompletedScreen: React.FC = () => {
       // 1. Guardado Local (Para la racha y velocidad)
       saveWorkoutSession({
         id: Date.now().toString(),
+        userId: userId || 'local-user',
         routineId: routineData.id,
         routineName: routineData.name,
         // ✅ FIX: Obtenemos el timestamp en formato ISO pero ajustado a la zona horaria LOCAL del dispositivo
         date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString(),
-        duration: duration,
+        totalDuration: duration,
         exercisesCompleted: totalExercises,
         totalExercises: totalExercises,
         setsCompleted: totalSets,
         totalSets: totalSets,
-        painLevelBefore: startPainLevel,
-        painLevelAfter: painLevel
+        painBefore: startPainLevel,
+        painAfter: painLevel,
+        completed: true
       });
 
       // 2. Guardado en Firestore (Nube) con Timeout de 5 segundos
       try {
         const firebaseCall = saveSession({
-          userId: 'user-admin', 
+          userId: userId || 'local-user', 
           routineId: routineData.id,
           routineName: routineData.name,
           totalDuration: duration,
@@ -139,20 +123,22 @@ const CompletedScreen: React.FC = () => {
 
       saveWorkoutSession({
         id: Date.now().toString(),
+        userId: userId || 'local-user',
         routineId: routineData.id,
         routineName: routineData.name,
         // ✅ FIX: Obtenemos el timestamp en formato ISO pero ajustado a la zona horaria LOCAL del dispositivo
         date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString(),
-        duration: duration,
+        totalDuration: duration,
         exercisesCompleted: totalExercises,
         totalExercises: totalExercises,
         setsCompleted: totalSets,
-        totalSets: totalSets
+        totalSets: totalSets,
+        completed: true
       });
 
       try {
         const firebaseCall = saveSession({
-          userId: 'user-admin',
+          userId: userId || 'local-user',
           routineId: routineData.id,
           routineName: routineData.name,
           totalDuration: duration,

@@ -11,11 +11,7 @@ const ProgressScreen: React.FC = () => {
     const handleFocusChange = () => {
       setProgress(getUserProgress());
     };
-
-    // ✅ FIX: Eliminamos el evento 'storage' inútil en SPA y dejamos solo 'focus' 
-    // para actualizar cuando el usuario vuelve a la app desde otra aplicación del celular.
     window.addEventListener('focus', handleFocusChange);
-
     return () => {
       window.removeEventListener('focus', handleFocusChange);
     };
@@ -26,7 +22,6 @@ const ProgressScreen: React.FC = () => {
     const year = now.getFullYear();
     const month = now.getMonth();
     
-    // Sesiones del mes actual
     const monthSessions = getSessionsByMonth(year, month);
     const sessionDays = new Set(monthSessions.map(s => new Date(s.date).getDate()));
     
@@ -36,12 +31,10 @@ const ProgressScreen: React.FC = () => {
     
     const data = [];
     
-    // Días vacíos al inicio (relleno)
     for (let i = 0; i < firstDayOfMonth; i++) {
       data.push({ day: null, status: null });
     }
     
-    // Días del mes
     for (let d = 1; d <= daysInMonth; d++) {
       let status = 'none';
       if (sessionDays.has(d)) {
@@ -58,6 +51,48 @@ const ProgressScreen: React.FC = () => {
   const currentMonthName = useMemo(() => {
     return new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(new Date());
   }, []);
+
+  // Lógica del gráfico de dolor
+  const chartPoints = useMemo(() => {
+    const sessionsWithPain = progress.sessionsHistory
+      .filter(s => typeof s.painAfter === 'number')
+      .slice(-5); // Últimas 5 sesiones con datos
+
+    if (sessionsWithPain.length === 0) return [];
+
+    const points = sessionsWithPain.map((s, i, arr) => {
+      const x = arr.length === 1 ? 50 : (i / (arr.length - 1)) * 100;
+      // Escala Y: 0 dolor = 45 (abajo), 10 dolor = 5 (arriba)
+      const y = 45 - ((s.painAfter || 0) / 10) * 40;
+      return { x, y, val: s.painAfter || 0 };
+    });
+    
+    return points;
+  }, [progress.sessionsHistory]);
+
+  const chartPath = useMemo(() => {
+    if (chartPoints.length < 2) return '';
+    
+    // Generar curva suave (Bezier) o líneas rectas
+    // Para simplificar y que se vea "sharp" como en el diseño original, usamos líneas pero con curva suave si es posible
+    // Usaremos Catmull-Rom to Cubic Bezier conversion simplificada o simplemente líneas por ahora
+    return chartPoints.reduce((acc, p, i) => {
+        if (i === 0) return `M ${p.x},${p.y}`;
+        // Curva cuadrática simple para suavizar
+        const prev = chartPoints[i - 1];
+        const cpX = (prev.x + p.x) / 2;
+        return `${acc} Q ${cpX},${prev.y} ${cpX},${(prev.y + p.y)/2} T ${p.x},${p.y}`;
+    }, '');
+  }, [chartPoints]);
+
+  const painDiffMessage = useMemo(() => {
+      if (chartPoints.length < 2) return "Sigue registrando...";
+      const first = chartPoints[0].val;
+      const last = chartPoints[chartPoints.length - 1].val;
+      if (last < first) return `¡Bajó ${(first - last) * 10}%!`;
+      if (last > first) return `Subió levemente`;
+      return `Se mantiene estable`;
+  }, [chartPoints]);
 
   return (
     <div className="bg-gray-50 dark:bg-slate-900 font-display flex items-center justify-center min-h-screen py-8 px-4 transition-colors duration-300 bg-[radial-gradient(#dcd6f7_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] bg-[size:20px_20px]">
@@ -182,42 +217,59 @@ const ProgressScreen: React.FC = () => {
               <div className="flex justify-between items-end mb-4">
                 <div>
                   <h2 className="text-[#111816] dark:text-white text-base font-bold">Nivel de Dolor</h2>
-                  <p className="text-xs text-gray-400 mt-1">Comparativa semanal</p>
+                  <p className="text-xs text-gray-400 mt-1">Últimas 5 sesiones</p>
                 </div>
-                <div className="flex gap-3 text-[10px] font-medium">
-                  <div className="flex items-center gap-1 text-gray-400">
-                    <div className="w-2 h-2 rounded-full bg-red-300"></div> Antes
-                  </div>
-                  <div className="flex items-center gap-1 text-primary-dark">
-                    <div className="w-2 h-2 rounded-full bg-primary"></div> Ahora
-                  </div>
-                </div>
+                {chartPoints.length > 0 && (
+                   <div className="flex gap-3 text-[10px] font-medium">
+                     <div className="flex items-center gap-1 text-gray-400">
+                       <span className="font-bold">{chartPoints[0].val}</span> Inicio
+                     </div>
+                     <div className="flex items-center gap-1 text-primary-dark">
+                       <span className="font-bold">{chartPoints[chartPoints.length-1].val}</span> Actual
+                     </div>
+                   </div>
+                )}
               </div>
               <div className="relative h-40 w-full">
-                <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 50">
-                   <line stroke="#f0f0f0" strokeDasharray="2" strokeWidth="0.5" x1="0" x2="100" y1="10" y2="10"></line>
-                   <line stroke="#f0f0f0" strokeDasharray="2" strokeWidth="0.5" x1="0" x2="100" y1="25" y2="25"></line>
-                   <line stroke="#f0f0f0" strokeDasharray="2" strokeWidth="0.5" x1="0" x2="100" y1="40" y2="40"></line>
-                   <path d="M0,15 Q20,12 40,20 T80,18 T100,25" fill="none" opacity="0.6" stroke="#fca5a5" strokeLinecap="round" strokeWidth="2"></path>
-                   <defs>
-                     <linearGradient id="gradient-chart" x1="0" x2="0" y1="0" y2="1">
-                       <stop offset="0%" stopColor="#2beebd" stopOpacity="0.2"></stop>
-                       <stop offset="100%" stopColor="#2beebd" stopOpacity="0"></stop>
-                     </linearGradient>
-                   </defs>
-                   <path d="M0,15 Q20,25 40,35 T80,42 T100,45" fill="url(#gradient-chart)" stroke="none"></path>
-                   <path d="M0,15 Q20,25 40,35 T80,42 T100,45" fill="none" stroke="#2beebd" strokeLinecap="round" strokeWidth="3"></path>
-                   <circle cx="0" cy="15" fill="white" r="1.5" stroke="#2beebd" strokeWidth="1.5"></circle>
-                   <circle cx="40" cy="35" fill="white" r="1.5" stroke="#2beebd" strokeWidth="1.5"></circle>
-                   <circle cx="80" cy="42" fill="white" r="1.5" stroke="#2beebd" strokeWidth="1.5"></circle>
-                   <circle cx="100" cy="45" fill="white" r="1.5" stroke="#2beebd" strokeWidth="1.5"></circle>
-                </svg>
+                {chartPoints.length > 1 ? (
+                  <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 50">
+                    {/* Grid lines */}
+                    <line stroke="#f0f0f0" strokeDasharray="2" strokeWidth="0.5" x1="0" x2="100" y1="5" y2="5"></line>
+                    <line stroke="#f0f0f0" strokeDasharray="2" strokeWidth="0.5" x1="0" x2="100" y1="25" y2="25"></line>
+                    <line stroke="#f0f0f0" strokeDasharray="2" strokeWidth="0.5" x1="0" x2="100" y1="45" y2="45"></line>
+                    
+                    <defs>
+                      <linearGradient id="gradient-chart" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#2beebd" stopOpacity="0.2"></stop>
+                        <stop offset="100%" stopColor="#2beebd" stopOpacity="0"></stop>
+                      </linearGradient>
+                    </defs>
+
+                    {/* Area fill - cerrado manualmente para que el degradado funcione */}
+                    <path d={`${chartPath} L ${chartPoints[chartPoints.length-1].x},50 L ${chartPoints[0].x},50 Z`} fill="url(#gradient-chart)" stroke="none"></path>
+                    
+                    {/* Line stroke */}
+                    <path d={chartPath} fill="none" stroke="#2beebd" strokeLinecap="round" strokeWidth="3"></path>
+
+                    {/* Dots */}
+                    {chartPoints.map((p, i) => (
+                        <circle key={i} cx={p.x} cy={p.y} fill="white" r="2" stroke="#2beebd" strokeWidth="1.5"></circle>
+                    ))}
+                  </svg>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400 text-xs">
+                    Completa más sesiones para ver tu progreso
+                  </div>
+                )}
+                
                 <div className="absolute -bottom-2 -right-2 w-24 h-24 z-10 pointer-events-none">
                   <img alt="Personaje mascota" className="w-full h-full object-contain drop-shadow-lg transform scale-x-[-1]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwWgrISlrwTFc7jmRvUKHhWqfEXme0byWlD4beyks0eo3XSf1o6b9NV283nIm1O-Wb-4FuWVlikEtVu8BhrfqREoUdEA-gK8n-bQkv2uxaCWHGuBdIrcexuyxYG1hxb1CpMKVrRowcKSVwCZjvpWqDCXe9NmJzZnbIVddt5W0Cl_m06twfAgqgryYCCK0Zgyuu7cSFvkrHT6i8uK_m7oXTfjX_fksq6cmPLZv83yKDg8mse6fxtObhEsMd2Gw5Njwv9WoLUuuJCQ"/>
                 </div>
-                <div className="absolute top-8 right-2 bg-white dark:bg-gray-700 p-2 rounded-xl rounded-br-none shadow-md border border-gray-100 dark:border-gray-600 max-w-[100px] z-20 animate-bounce" style={{ animationDuration: '3s' }}>
-                  <p className="text-[9px] font-bold text-gray-600 dark:text-gray-200 leading-tight">¡Genial! El dolor bajó 15%</p>
-                </div>
+                {chartPoints.length > 1 && (
+                    <div className="absolute top-8 right-2 bg-white dark:bg-gray-700 p-2 rounded-xl rounded-br-none shadow-md border border-gray-100 dark:border-gray-600 max-w-[100px] z-20 animate-bounce" style={{ animationDuration: '3s' }}>
+                    <p className="text-[9px] font-bold text-gray-600 dark:text-gray-200 leading-tight">{painDiffMessage}</p>
+                    </div>
+                )}
               </div>
             </div>
           </div>

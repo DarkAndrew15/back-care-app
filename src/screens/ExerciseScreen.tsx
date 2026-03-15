@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Exercise } from '@/types';
+import { useExerciseTimer } from '@/hooks/useExerciseTimer';
 
 // Función helper para calcular repeticiones por serie (Pirámide McGill 5-3-1)
-const getTargetRepsForSet = (totalReps: number | undefined, currentSet: number) => {
+const getTargetRepsForSet = (totalReps: number | string | undefined, currentSet: number) => {
   if (!totalReps) return 0;
   
   // Lógica específica para la Pirámide del protocolo McGill (9 reps totales en 3 series)
@@ -13,27 +15,10 @@ const getTargetRepsForSet = (totalReps: number | undefined, currentSet: number) 
   }
   
   // Para rutinas estándar, asume que 'reps' es por serie
-  return totalReps; 
+  if (typeof totalReps === 'number') return totalReps;
+  const match = String(totalReps).match(/\d+/);
+  return match ? parseInt(match[0]) : 5;
 };
-
-interface Exercise {
-  id: string;
-  name: string;
-  target: string;
-  sets: number;
-  reps: number | string;
-  hold: number | string;
-  repsOrDuration: string;
-  description: string;
-  image: string;
-  avatar: string;
-  instructions: string[];
-  warnings: string[];
-  tips?: string[];
-  why: string;
-  rest: string;
-  duration?: number;
-}
 
 interface RoutineData {
   id: string;
@@ -46,17 +31,10 @@ interface RoutineData {
 
 const ExerciseScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { data } = useParams<{ data: string }>();
+  const location = useLocation();
+  // const { data } = useParams<{ data: string }>(); // Ya no usamos URL params
 
-  // ✅ 1. Timer inicia en PAUSA (isActive = false)
-  const [timeLeft, setTimeLeft] = useState(10);
-  const [isActive, setIsActive] = useState(false); // ← CAMBIADO A FALSE
-  const [totalTime, setTotalTime] = useState(10);
-
-  // ✅ 2. Estado para pantalla de descanso
-  const [isResting, setIsResting] = useState(false);
-  const [restTime, setRestTime] = useState(30);
-  const [restTotalTime, setRestTotalTime] = useState(30);
+  // Estados anteriores eliminados por hooks
   const [pendingNextExercise, setPendingNextExercise] = useState(false);
 
   const [routineData, setRoutineData] = useState<RoutineData | null>(null);
@@ -65,6 +43,17 @@ const ExerciseScreen: React.FC = () => {
   const [currentRep, setCurrentRep] = useState(1);
   const [currentSide, setCurrentSide] = useState<'left' | 'right'>('right');
   const [showExitModal, setShowExitModal] = useState(false);
+
+  // Estado derivado para UI: ¿Estamos descansando?
+  const [isResting, setIsResting] = useState(false);
+
+  // Refs para lógica compleja (callbacks estables)
+  const handleNextRef = useRef<() => void>(() => {});
+  const finishRestRef = useRef<() => void>(() => {});
+
+  // Hooks de Timer
+  const exerciseTimer = useExerciseTimer(() => handleNextRef.current());
+  const restTimer = useExerciseTimer(() => finishRestRef.current());
 
   // Refs para acceder a los valores más recientes sin causar re-renders
   const routineDataRef = useRef<RoutineData | null>(null);
@@ -102,9 +91,8 @@ const ExerciseScreen: React.FC = () => {
   // ✅ Función para iniciar descanso
   const startRest = (duration: number) => {
     setIsResting(true);
-    setRestTime(duration);
-    setRestTotalTime(duration);
-    setIsActive(true); // Auto-iniciar el descanso
+    exerciseTimer.pauseTimer(); // Aseguramos que el ejercicio se pause
+    restTimer.resetTimer(duration, true); // Usamos el hook: setea el tiempo y auto-inicia
   };
 
   const handleComplete = useCallback(() => {
@@ -117,47 +105,39 @@ const ExerciseScreen: React.FC = () => {
       duration: duration // Añadimos la duración real calculada
     };
 
-    try {
-      // Codificación segura con encodeURIComponent para evitar problemas con tildes y caracteres especiales
-      const encodedData = btoa(encodeURIComponent(JSON.stringify(finalData)));
-      navigate(`/completed/${encodedData}`);
-    } catch (error) {
-      console.error('❌ Error al codificar datos para CompletedScreen:', error);
-      // Fallback por si acaso
-      const fallbackEncoded = btoa(JSON.stringify(finalData));
-      navigate(`/completed/${fallbackEncoded}`);
-    }
+    // Navegar a CompletedScreen pasando state
+    navigate('/completed', { state: finalData });
   }, [navigate]);
 
   // ✅ Función para terminar descanso
   const finishRest = useCallback(() => {
     setIsResting(false);
-    setIsActive(false);
+    restTimer.pauseTimer(); // Detenemos el timer de descanso usando el hook
 
     if (pendingNextExerciseRef.current) {
-      // Primero mover al siguiente ejercicio, luego actualizar el tiempo
+      // Avanzar al siguiente ejercicio
       setCurrentExerciseIndex(prev => prev + 1);
       setCurrentSet(1);
       setCurrentRep(1);
       setCurrentSide('right');
       setPendingNextExercise(false);
-      // El useEffect que escucha currentExerciseIndex actualizará totalTime automáticamente
+      // El useEffect se encarga de llamar a exerciseTimer.resetTimer
     } else {
-      // Actualizar totalTime al del ejercicio actual después del descanso
+      // Reiniciar el tiempo del ejercicio actual
       if (routineDataRef.current && routineDataRef.current.exercises[currentExerciseIndexRef.current]) {
         const exercise = routineDataRef.current.exercises[currentExerciseIndexRef.current];
         const holdTime = typeof exercise.hold === 'number' ? exercise.hold : 10;
-        setTotalTime(holdTime);
-        setTimeLeft(holdTime);
+        // Usamos el hook de ejercicio para setear el tiempo (false = esperando a que el usuario de play)
+        exerciseTimer.resetTimer(holdTime, false);
       }
     }
-  }, []);
+  }, [exerciseTimer, restTimer]);
 
   const handleNext = useCallback(() => {
     const exercise = routineDataRef.current?.exercises[currentExerciseIndexRef.current];
     if (!exercise) return;
 
-    const repsCount = getTargetRepsForSet(exercise.reps as number, currentSetRef.current);
+    const repsCount = getTargetRepsForSet(exercise.reps, currentSetRef.current);
 
     // ✅ Manejo para McGill Big 3 (mcgill-1, mcgill-2, mcgill-3)
     if (exercise.id.startsWith('mcgill-')) {
@@ -301,73 +281,40 @@ const ExerciseScreen: React.FC = () => {
     }
   }, []);
 
-  // Decodificar datos
+  // Cargar datos desde location.state
   useEffect(() => {
-    if (!data) {
-      console.error('❌ No hay parámetro data en la URL');
-      navigate('/home');
-      return;
-    }
-
-    try {
-      const decoded = JSON.parse(decodeURIComponent(atob(data)));
-      console.log('✅ Datos decodificados:', decoded);
+    if (location.state) {
+      const data = location.state as RoutineData;
+      console.log('✅ Datos cargados desde state:', data);
       
-      if (!decoded.exercises || decoded.exercises.length === 0) {
-        throw new Error('No hay ejercicios en la rutina');
+      if (!data.exercises || data.exercises.length === 0) {
+        console.error('No hay ejercicios en la rutina');
+        navigate('/home');
+        return;
       }
 
-      setRoutineData(decoded);
-      setCurrentExerciseIndex(decoded.currentExerciseIndex || 0);
-      setCurrentSet(decoded.currentSet || 1);
-    } catch (error: any) {
-      console.error('❌ ERROR al decodificar:', error);
-      alert('Error al cargar ejercicios: ' + error.message);
+      setRoutineData(data);
+      setCurrentExerciseIndex(data.currentExerciseIndex || 0);
+      setCurrentSet(data.currentSet || 1);
+    } else {
+      console.error('❌ No hay state en la navegación');
       navigate('/home');
     }
-  }, [data, navigate]);
+  }, [location.state, navigate]);
 
   // ✅ Actualizar totalTime cuando cambia el ejercicio actual
   useEffect(() => {
     if (routineData && routineData.exercises[currentExerciseIndex]) {
       const exercise = routineData.exercises[currentExerciseIndex];
       const holdTime = typeof exercise.hold === 'number' ? exercise.hold : 10;
-      setTotalTime(holdTime);
-      setTimeLeft(holdTime);
+      exerciseTimer.resetTimer(holdTime, false);
     }
   }, [currentExerciseIndex, routineData]);
 
-  // ✅ Timer para ejercicio
-  useEffect(() => {
-    if (!isResting) {
-      let interval: any = null;
-      if (isActive && timeLeft > 0) {
-        interval = setInterval(() => {
-          setTimeLeft(timeLeft - 1);
-        }, 1000);
-      } else if (timeLeft === 0 && isActive) {
-        clearInterval(interval);
-        handleNext();
-      }
-      return () => clearInterval(interval);
-    }
-  }, [isActive, timeLeft, isResting]);
+  // Sync refs para hooks
+  useEffect(() => { handleNextRef.current = handleNext; }, [handleNext]);
+  useEffect(() => { finishRestRef.current = finishRest; }, [finishRest]);
 
-  // ✅ Timer para descanso
-  useEffect(() => {
-    if (isResting) {
-      let interval: any = null;
-      if (isActive && restTime > 0) {
-        interval = setInterval(() => {
-          setRestTime(restTime - 1);
-        }, 1000);
-      } else if (restTime === 0 && isActive) {
-        clearInterval(interval);
-        finishRest();
-      }
-      return () => clearInterval(interval);
-    }
-  }, [isActive, restTime, isResting]);
 
   if (!routineData || !routineData.exercises || routineData.exercises.length === 0) {
     return (
@@ -383,7 +330,7 @@ const ExerciseScreen: React.FC = () => {
   const getRepsCount = (exercise: Exercise): number => {
     // Para McGill Big 3 (mcgill-1, mcgill-2, mcgill-3), usar pirámide 5-3-1
     if (exercise.id.startsWith('mcgill-')) {
-      return getTargetRepsForSet(exercise.reps as number, currentSet);
+      return getTargetRepsForSet(exercise.reps, currentSet);
     }
     // Para side-plank legacy, retornar 2 lados
     if (exercise.id === 'side-plank') return 2;
@@ -427,7 +374,7 @@ const ExerciseScreen: React.FC = () => {
 
       // A. Sumar las series completas anteriores de este ejercicio
       for (let s = 1; s < currentSet; s++) {
-        const repsInSet = currentExercise.id.startsWith('mcgill-') ? getTargetRepsForSet(currentExercise.reps as number, s) : getRepsCount(currentExercise);
+        const repsInSet = currentExercise.id.startsWith('mcgill-') ? getTargetRepsForSet(currentExercise.reps, s) : getRepsCount(currentExercise);
         completedScreens += repsInSet * (currentHasSides ? 2 : 1);
       }
 
@@ -438,7 +385,7 @@ const ExerciseScreen: React.FC = () => {
           completedScreens += (currentRep - 1);
         } else {
           // Lado 2 (Izquierdo): sumamos TODO el Lado 1 + las reps del Lado 2
-          const totalRepsCurrentSet = getTargetRepsForSet(currentExercise.reps as number, currentSet);
+          const totalRepsCurrentSet = getTargetRepsForSet(currentExercise.reps, currentSet);
           completedScreens += totalRepsCurrentSet + (currentRep - 1);
         }
       } else {
@@ -494,9 +441,9 @@ const ExerciseScreen: React.FC = () => {
   const progress = calculateProgress();
   
   // ✅ Timer progress dinámico (ejercicio o descanso)
-  const displayTime = isResting ? restTime : timeLeft;
-  const displayTotalTime = isResting ? restTotalTime : totalTime;
-  const timerProgress = ((displayTotalTime - displayTime) / displayTotalTime) * 100;
+  const displayTime = isResting ? restTimer.timeLeft : exerciseTimer.timeLeft;
+  const displayTotalTime = isResting ? restTimer.totalTime : exerciseTimer.totalTime;
+  const timerProgress = displayTotalTime > 0 ? ((displayTotalTime - displayTime) / displayTotalTime) * 100 : 0;
   const strokeDasharray = 276;
   const strokeDashoffset = strokeDasharray - (timerProgress / 100) * strokeDasharray;
 
@@ -663,11 +610,11 @@ const ExerciseScreen: React.FC = () => {
               <span className="text-[9px] font-bold text-[#333333]/40 dark:text-gray-400 uppercase tracking-wide mt-1">Saltar</span>
             </button>
             <button
-                onClick={() => setIsActive(!isActive)}
+                onClick={() => isResting ? restTimer.setIsActive(!restTimer.isActive) : exerciseTimer.setIsActive(!exerciseTimer.isActive)}
                 className="size-20 -mt-8 rounded-full bg-gradient-to-br from-purple-main to-primary shadow-glow flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all border-[5px] border-background-light relative z-20 group"
             >
               <span className="material-symbols-outlined text-4xl filled group-hover:animate-pulse">
-                {isActive ? 'pause' : 'play_arrow'}
+                {(isResting ? restTimer.isActive : exerciseTimer.isActive) ? 'pause' : 'play_arrow'}
               </span>
             </button>
             <button className="flex flex-col items-center justify-center gap-1 group">
@@ -679,7 +626,7 @@ const ExerciseScreen: React.FC = () => {
           </div>
           <p className="text-[11px] text-gray-500 dark:text-gray-300 mt-5 font-semibold bg-white/50 dark:bg-slate-800/80 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/50 dark:border-slate-700/50 shadow-sm pointer-events-auto">
             {isResting ? (
-              <span className="text-amber-600">Descansando • {restTime}s restantes</span>
+              <span className="text-amber-600">Descansando • {restTimer.timeLeft}s restantes</span>
             ) : (
               <>
                 {progress.completed} de {progress.total} completados • <span className="text-primary">{currentExercise.rest.split('.')[0]}</span>

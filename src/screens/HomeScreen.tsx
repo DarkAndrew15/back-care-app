@@ -1,28 +1,57 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNavigation from '../components/BottomNavigation';
-import { Routine } from '../types';
-import { getUserProgress } from '../services/storage';
+import { getUserProgress, syncProgressFromCloud } from '../services/storage';
+import { getUserSessions } from '../services/firebase';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { userId, userName } = useAuth();
+  
+  // Carga inicial ultrarrápida (Offline-first)
   const [progress, setProgress] = useState(getUserProgress());
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Función asíncrona que hace la magia por detrás
+  const syncWithCloud = async () => {
+    if (!userId) return; // Esperar a tener userId
+
+    try {
+      setIsSyncing(true);
+      // Traemos las sesiones guardadas bajo tu ID único en Firebase
+      const cloudSessions = await getUserSessions(userId);
+      
+      if (cloudSessions && cloudSessions.length > 0) {
+        // Reconstruimos la data local y actualizamos el estado de la UI
+        const syncedProgress = syncProgressFromCloud(cloudSessions);
+        setProgress(syncedProgress);
+      }
+    } catch (error) {
+      console.error("Error silencioso al sincronizar con Firebase:", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   useEffect(() => {
+    // 1. Ejecutar sincronización al montar la pantalla si hay userId
+    if (userId) syncWithCloud();
+
     const handleFocusChange = () => {
-      setProgress(getUserProgress());
+      // 2. Ejecutar cuando volvemos a la pestaña/app
+      setProgress(getUserProgress()); // Rápido desde caché
+      if (userId) syncWithCloud(); // Silencioso desde la nube
     };
 
-    // ✅ FIX: Eliminamos el evento 'storage' inútil en SPA y dejamos solo 'focus' 
-    // para actualizar cuando el usuario vuelve a la app desde otra aplicación del celular.
     window.addEventListener('focus', handleFocusChange);
 
     return () => {
       window.removeEventListener('focus', handleFocusChange);
     };
-  }, []);
+  }, [userId]); // Dependencia de userId para re-sincronizar cuando cargue
 
   const completionPercentage = useMemo(() => {
     // Asumiendo una meta de 28 sesiones para la Fase 1 (4 semanas)
@@ -38,6 +67,15 @@ const HomeScreen: React.FC = () => {
           <h1 className="text-2xl font-extrabold text-text-main dark:text-white leading-none">¡Hola, Hiro!</h1>
         </div>
         <div className="flex items-center">
+          
+          {/* Indicador de Sincronización */}
+          {isSyncing && (
+            <div className="flex items-center mr-3 bg-white/50 dark:bg-black/20 px-2 py-1 rounded-full">
+              <span className="material-symbols-outlined text-[16px] text-purple-main animate-spin">sync</span>
+              <span className="text-[10px] text-purple-main font-bold ml-1 tracking-wider uppercase">Sync...</span>
+            </div>
+          )}
+
           <button 
             onClick={toggleTheme}
             className="relative flex items-center justify-center size-10 rounded-full bg-white dark:bg-white/10 shadow-sm border border-gray-100 dark:border-gray-700 text-text-main hover:bg-gray-50 transition-colors mr-2"

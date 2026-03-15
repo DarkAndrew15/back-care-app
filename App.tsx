@@ -16,8 +16,8 @@ const App: React.FC = () => {
         <Route path="/onboarding" element={<OnboardingScreen />} />
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/routine/:id" element={<RoutineDetailScreen />} />
-        <Route path="/exercise/:data" element={<ExerciseScreen />} />
-        <Route path="/completed/:id" element={<CompletedScreen />} />
+        <Route path="/exercise" element={<ExerciseScreen />} />
+        <Route path="/completed" element={<CompletedScreen />} />
         <Route path="/progress" element={<ProgressScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="*" element={<Navigate to="/home" replace />} />

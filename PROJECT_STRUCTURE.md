@@ -37,7 +37,7 @@ El proyecto está estructurado siguiendo buenas prácticas de desarrollo fronten
 
 ```
 backcare/
-├── .env.local                 # Variables de entorno locales
+├── .env.local                 # Variables de entorno locales (Firebase, Gemini)
 ├── .gitignore                 # Archivos ignorados por Git
 ├── App.tsx                    # Componente principal de la aplicación con rutas
 ├── index.html                 # Punto de entrada HTML
@@ -57,8 +57,13 @@ backcare/
 ├── src/                       # Código fuente principal
 │   ├── components/            # Componentes reutilizables
 │   │   └── BottomNavigation.tsx # Componente de navegación inferior
+│   ├── contexts/              # Contextos de React
+│   │   ├── AuthContext.tsx    # Gestión de identidad (UUID anónimo persistente)
+│   │   └── ThemeContext.tsx   # Gestión de tema (light/dark mode)
 │   ├── data/                  # Datos estáticos de rutinas
 │   │   └── routines.ts        # Definición de rutinas del Protocolo McGill
+│   ├── hooks/                 # Hooks personalizados
+│   │   └── useExerciseTimer.ts # Hook para temporizadores de ejercicio/descanso
 │   ├── screens/               # Pantallas de la aplicación
 │   │   ├── CompletedScreen.tsx # Pantalla de ejercicio completado y registro de dolor
 │   │   ├── ExerciseScreen.tsx # Pantalla de ejecución de ejercicio con temporizador circular
@@ -66,17 +71,29 @@ backcare/
 │   │   ├── OnboardingScreen.tsx # Pantalla de bienvenida
 │   │   ├── ProfileScreen.tsx  # Perfil del usuario
 │   │   ├── ProgressScreen.tsx # Seguimiento del progreso
-│   │   └── RoutineDetailScreen.tsx # Detalles de rutina (pasa datos vía Base64 en URL)
+│   │   └── RoutineDetailScreen.tsx # Detalles de rutina
 │   ├── services/              # Servicios y lógica de negocio
-│   │   ├── firebase.ts        # Configuración y funciones de Firebase
+│   │   ├── firebase.ts        # Funciones CRUD para Firestore
 │   │   └── storage.ts         # Servicio de persistencia local (localStorage) y lógica de rachas
 │   ├── firebase.ts            # Configuración de Firebase (raíz de src)
 │   ├── index.css              # Estilos CSS con Tailwind
-│   └── types.ts               # Tipos base para servicios y persistencia
+│   └── types.ts               # Tipos TypeScript unificados (Routine, Exercise, Session, UserProgress)
 └── public/                    # Assets estáticos
     └── images/                # Imágenes locales
-        ├── anime/             # Personajes de anime (Goku, Naruto)
+        ├── anime/             # Personajes de anime (Goku, Naruto - 9 archivos)
+        │   ├── ChibiNarutoDurmiendo.png
+        │   ├── ChibiNarutoPausaActiva.png
+        │   ├── ChibiNarutoSaludando.png
+        │   ├── GokuBannerEjercicioPiso.png
+        │   ├── GokuBurbuja.png
+        │   ├── GokuBustoAnimo.png
+        │   ├── GokuChibiBannerSerio.png
+        │   ├── GokuNarutoCelebrando.png
+        │   └── NarutoMeditando.png
         └── exercises/         # Imágenes de ejercicios
+            ├── bird-dog.jpg
+            ├── curl-up.jpg
+            └── side-plank.jpg
 ```
 
 ## Descripción de Componentes
@@ -89,6 +106,13 @@ backcare/
 
 #### components/
 - **BottomNavigation.tsx**: Componente reutilizable de navegación inferior con tres opciones (Inicio, Progreso, Perfil) que cambia según el tema (púrpura o menta). Utiliza hooks de React Router DOM para determinar la ruta activa y aplicar estilos correspondientes.
+
+#### contexts/
+- **AuthContext.tsx**: Contexto que gestiona la identidad del usuario mediante un UUID persistente generado con `crypto.randomUUID()`. Almacena el ID en localStorage para mantener la identidad entre sesiones sin requerir login explícito (experiencia frictionless). Permite sincronizar datos específicos de cada usuario en Firebase.
+- **ThemeContext.tsx**: Contexto que gestiona el tema de la aplicación (light/dark). Lee la preferencia de localStorage o la preferencia del sistema, y aplica la clase `dark` al elemento `<html>`. Incluye función `toggleTheme` para cambiar entre modos.
+
+#### hooks/
+- **useExerciseTimer.ts**: Hook personalizado para gestionar temporizadores de ejercicio y descanso. Expone estados (`timeLeft`, `totalTime`, `isActive`) y métodos (`startTimer`, `pauseTimer`, `resumeTimer`, `resetTimer`). Maneja intervalos de 1 segundo y ejecuta callback al completar la cuenta regresiva.
 
 #### screens/
 - **OnboardingScreen.tsx**: Pantalla de bienvenida que introduce la aplicación y sus beneficios. Presenta características clave como rutinas matutinas, seguimiento de progreso y protocolo clínicamente validado. Incluye un botón para comenzar el protocolo que redirige al usuario a la pantalla principal. La imagen de cabecera ahora utiliza una imagen local en lugar de una URL externa.
@@ -227,3 +251,48 @@ Durante la última sesión de desarrollo, se realizaron los siguientes cambios i
     - Colores semánticos: `dark:bg-rose-950/20`, `dark:bg-amber-900/20`, `dark:bg-purple-900/30`, `dark:bg-pink-900/20`, `dark:text-rose-400`, `dark:text-teal-400`, `dark:text-primary-light`
 
 28. **Verificación exhaustiva de consistencia**: Se realizó un rastreo completo de todos los elementos `bg-white` y `text-white` en la aplicación para asegurar que cada uno tenga su contraparte oscura correspondiente. Todos los elementos ahora tienen transiciones suaves entre temas.
+
+29. **Implementación de sincronización con Firebase (Cloud Sync)**:
+    - **`src/services/storage.ts`**: Añadida función `syncProgressFromCloud()` que:
+      - Mapea sesiones desde Firebase al formato local `WorkoutSession`
+      - Recalcula rachas (currentStreak, longestStreak) y duración total
+      - Maneja zonas horarias locales para evitar saltos de día
+      - Valida si la racha actual sigue activa comparando con la fecha de hoy
+      - Sobrescribe el localStorage con los datos sincronizados
+    - **`src/screens/HomeScreen.tsx`**: Implementada sincronización en la pantalla principal:
+      - Nueva función `syncWithCloud()` que obtiene sesiones vía `getUserSessions('user-admin')`
+      - `useEffect` actualizado para sincronizar al montar y al recuperar foco
+      - Añadido estado `isSyncing` para controlar el estado de sincronización
+      - Indicador visual en el header con ícono `sync` animado y texto "Sync..."
+
+30. **Arquitectura Offline-First**: La aplicación ahora sigue un patrón offline-first:
+    - Carga inicial instantánea desde localStorage
+    - Sincronización en segundo plano con Firebase
+    - Reconstrucción automática del caché local al recibir datos de la nube
+    - Actualización automática cuando el usuario vuelve a la app (evento `focus`)
+
+    ## Cambios Recientes y Mejoras (Marzo 2026)
+
+### 31. Unificación de Tipos y Alias
+- Se consolidaron todas las interfaces (`Routine`, `Exercise`, `Session`, `UserProgress`) en un único archivo maestro `src/types.ts`.
+- Se configuró `tsconfig.json` y `vite.config.ts` para usar alias `@/` consistentemente, mejorando la importación de módulos.
+
+### 32. Gestión de Identidad (`AuthContext`)
+- Se eliminó el usuario hardcodeado "user-admin".
+- Se implementó `AuthContext` que genera un UUID persistente en el dispositivo, permitiendo diferenciar usuarios y sincronizar sus datos específicos en Firebase sin requerir login explícito (experiencia frictionless).
+
+### 33. Navegación Robusta (`location.state`)
+- Se reemplazó la transmisión de datos por URL (Base64) por el uso del objeto `state` del historial de navegación.
+- Esto limpió las URLs, eliminó límites de tamaño de payload y previno errores de codificación/decodificación al navegar entre `RoutineDetail` -> `Exercise` -> `Completed`.
+
+### 34. Refactorización de Lógica de Ejercicio
+- Se extrajo la lógica de temporizadores (cuenta regresiva, pausa, reinicio) al hook `useExerciseTimer`.
+- Se simplificó `ExerciseScreen.tsx`, separando la lógica de UI de la lógica de tiempo, y reutilizando el mismo hook para los tiempos de ejercicio y de descanso.
+
+### 35. Visualización de Progreso Real
+- `ProgressScreen` ahora renderiza un gráfico SVG dinámico basado en los niveles de dolor (`painAfter`) registrados en las sesiones reales del usuario.
+- Se implementó un calendario de actividad que marca los días con sesiones completadas.
+
+### 36. Calidad de Código
+- Se añadieron scripts de validación (`npm run typecheck`) para asegurar la integridad del tipado en CI/CD.
+- Se corrigieron inconsistencias en los modelos de datos entre el frontend y los servicios de persistencia.

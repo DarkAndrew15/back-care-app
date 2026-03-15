@@ -143,15 +143,7 @@ const RoutineDetailScreen: React.FC = () => {
                           currentSet: 1,
                           startTime: Date.now()
                         };
-
-                        try {
-                          const encodedData = btoa(encodeURIComponent(JSON.stringify(singleExerciseData)));
-                          navigate(`/exercise/${encodedData}`);
-                        } catch (error) {
-                          console.error('❌ Error al codificar datos individuales:', error);
-                          const encodedData = btoa(JSON.stringify(singleExerciseData));
-                          navigate(`/exercise/${encodedData}`);
-                        }
+                        navigate('/exercise', { state: singleExerciseData });
                     }}
                     className="w-full text-left bg-white dark:bg-gray-800 p-3 pr-4 rounded-[20px] flex items-center gap-4 shadow-sm border border-gray-50/50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 active:scale-[0.98] transition-all cursor-pointer group"
                 >
@@ -208,15 +200,7 @@ const RoutineDetailScreen: React.FC = () => {
                 currentSet: 1,
                 startTime
               };
-
-              try {
-                const encodedData = btoa(encodeURIComponent(JSON.stringify(exerciseData)));
-                navigate(`/exercise/${encodedData}`);
-              } catch (error) {
-                console.error('❌ Error al codificar datos:', error);
-                const encodedData = btoa(JSON.stringify(exerciseData));
-                navigate(`/exercise/${encodedData}`);
-              }
+              navigate('/exercise', { state: exerciseData });
           }}
           className="w-full h-14 bg-[#1CD6A8] hover:bg-[#15c296] active:scale-[0.98] transition-all rounded-full flex items-center justify-between px-2 pl-6 shadow-lg shadow-teal-500/30 group mt-4"
         >
