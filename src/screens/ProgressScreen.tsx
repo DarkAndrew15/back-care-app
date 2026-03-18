@@ -6,6 +6,26 @@ import { getUserProgress, getSessionsByMonth } from '../services/storage';
 const ProgressScreen: React.FC = () => {
   const [progress, setProgress] = useState(getUserProgress());
   const days = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+  
+  // ✅ NUEVO: Estado para controlar el mes que estamos viendo en el calendario
+  const [displayDate, setDisplayDate] = useState(new Date());
+
+  // ✅ NUEVO: Funciones para cambiar de mes (restringidas al año actual)
+  const handlePrevMonth = () => {
+    setDisplayDate(prev => {
+      const newDate = new Date(prev);
+      if (newDate.getMonth() > 0) newDate.setMonth(newDate.getMonth() - 1);
+      return newDate;
+    });
+  };
+
+  const handleNextMonth = () => {
+    setDisplayDate(prev => {
+      const newDate = new Date(prev);
+      if (newDate.getMonth() < 11) newDate.setMonth(newDate.getMonth() + 1);
+      return newDate;
+    });
+  };
 
   useEffect(() => {
     const handleFocusChange = () => {
@@ -18,16 +38,20 @@ const ProgressScreen: React.FC = () => {
   }, []);
 
   const calendarData = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
+    // ✅ FIX: Usar displayDate en lugar de siempre usar "now"
+    const year = displayDate.getFullYear();
+    const month = displayDate.getMonth();
     
     const monthSessions = getSessionsByMonth(year, month);
     const sessionDays = new Set(monthSessions.map(s => new Date(s.date).getDate()));
     
     const firstDayOfMonth = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = now.getDate();
+    
+    // ✅ FIX: Solo marcar "hoy" si estamos viendo el mes y año actual
+    const now = new Date();
+    const isCurrentMonthAndYear = now.getFullYear() === year && now.getMonth() === month;
+    const today = isCurrentMonthAndYear ? now.getDate() : -1;
     
     const data = [];
     
@@ -46,11 +70,11 @@ const ProgressScreen: React.FC = () => {
     }
     
     return data;
-  }, [progress.sessionsHistory]);
+  }, [progress.sessionsHistory, displayDate]); // ✅ Añadimos displayDate a las dependencias
 
   const currentMonthName = useMemo(() => {
-    return new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(new Date());
-  }, []);
+    return new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(displayDate); // ✅ Actualizado
+  }, [displayDate]);
 
   // Lógica del gráfico de dolor
   const chartPoints = useMemo(() => {
@@ -95,18 +119,8 @@ const ProgressScreen: React.FC = () => {
   }, [chartPoints]);
 
   return (
-    <div className="bg-gray-50 dark:bg-slate-900 font-display flex items-center justify-center min-h-screen py-8 px-4 transition-colors duration-300 bg-[radial-gradient(#dcd6f7_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] bg-[size:20px_20px]">
-      <div className="relative w-full max-w-[375px] bg-background-light dark:bg-background-dark h-[812px] rounded-3xl shadow-2xl overflow-hidden border-4 border-white ring-1 ring-black/5 flex flex-col">
-        {/* Status Bar Mockup */}
-        <div className="h-6 w-full flex justify-between items-center px-6 pt-3 pb-1 z-20">
-          <span className="text-[10px] font-bold text-gray-400">9:41</span>
-          <div className="flex gap-1.5">
-            <span className="block h-2.5 w-2.5 rounded-full bg-gray-200"></span>
-            <span className="block h-2.5 w-2.5 rounded-full bg-gray-200"></span>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto no-scrollbar pb-28">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark pb-28 font-display relative overflow-hidden transition-colors duration-300">
+      <div className="flex-1 overflow-y-auto no-scrollbar">
           {/* Header */}
           <div className="px-6 pt-6 pb-4 flex justify-between items-start">
             <div className="flex flex-col gap-1">
@@ -182,11 +196,19 @@ const ProgressScreen: React.FC = () => {
           <div className="px-5 py-4">
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-soft border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <button className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-800 transition-colors">
+                <button 
+                  onClick={handlePrevMonth}
+                  disabled={displayDate.getMonth() === 0}
+                  className={`p-1 rounded-full transition-colors ${displayDate.getMonth() === 0 ? 'text-gray-200 dark:text-gray-700 cursor-not-allowed' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-700'}`}
+                >
                   <span className="material-symbols-outlined text-xl">chevron_left</span>
                 </button>
                 <h2 className="text-[#111816] dark:text-white text-base font-bold capitalize">{currentMonthName}</h2>
-                <button className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-800 transition-colors">
+                <button 
+                  onClick={handleNextMonth}
+                  disabled={displayDate.getMonth() === 11}
+                  className={`p-1 rounded-full transition-colors ${displayDate.getMonth() === 11 ? 'text-gray-200 dark:text-gray-700 cursor-not-allowed' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-700'}`}
+                >
                   <span className="material-symbols-outlined text-xl">chevron_right</span>
                 </button>
               </div>
@@ -257,8 +279,8 @@ const ProgressScreen: React.FC = () => {
                     ))}
                   </svg>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400 text-xs">
-                    Completa más sesiones para ver tu progreso
+                  <div className="flex items-center justify-center h-full w-[65%] pr-4 text-gray-400 dark:text-gray-500 text-xs text-center leading-relaxed">
+                    Completa más sesiones para ver tu curva de progreso
                   </div>
                 )}
                 
@@ -275,14 +297,14 @@ const ProgressScreen: React.FC = () => {
           </div>
         </div>
         
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-             <button className="bg-gradient-to-tr from-primary to-purple-main text-[#111816] rounded-full p-3 shadow-lg shadow-primary/30 border-4 border-white dark:border-gray-900 transform transition-transform active:scale-95 group">
+        {/* Botón Flotante Ajustado */}
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-40">
+             <button className="bg-gradient-to-tr from-primary to-purple-main text-white rounded-full p-3 shadow-lg shadow-primary/30 border-4 border-white dark:border-gray-900 transform transition-transform active:scale-95 group">
                 <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform">add</span>
             </button>
         </div>
         
         <BottomNavigation theme={NavTheme.Mint} />
-      </div>
     </div>
   );
 };

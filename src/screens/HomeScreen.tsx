@@ -14,6 +14,8 @@ const HomeScreen: React.FC = () => {
   // Carga inicial ultrarrápida (Offline-first)
   const [progress, setProgress] = useState(getUserProgress());
   const [isSyncing, setIsSyncing] = useState(false);
+  // ✅ NUEVO ESTADO: Controla la visibilidad de la notificación
+  const [showNotification, setShowNotification] = useState(false);
 
   // Función asíncrona que hace la magia por detrás
   const syncWithCloud = async () => {
@@ -53,6 +55,14 @@ const HomeScreen: React.FC = () => {
     };
   }, [userId]); // Dependencia de userId para re-sincronizar cuando cargue
 
+  // ✅ NUEVA FUNCIÓN: Muestra la alerta y la oculta tras 3 segundos
+  const handleNotificationClick = () => {
+    setShowNotification(true);
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 3000);
+  };
+
   const completionPercentage = useMemo(() => {
     // Asumiendo una meta de 28 sesiones para la Fase 1 (4 semanas)
     return Math.min(100, Math.round((progress.totalSessions / 28) * 100));
@@ -76,7 +86,7 @@ const HomeScreen: React.FC = () => {
             </div>
           )}
 
-          <button 
+          <button
             onClick={toggleTheme}
             className="relative flex items-center justify-center size-10 rounded-full bg-white dark:bg-white/10 shadow-sm border border-gray-100 dark:border-gray-700 text-text-main hover:bg-gray-50 transition-colors mr-2"
           >
@@ -84,15 +94,38 @@ const HomeScreen: React.FC = () => {
               {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
           </button>
-          <button className="relative flex items-center justify-center size-10 rounded-full bg-white dark:bg-white/10 shadow-sm border border-gray-100 dark:border-gray-700 text-text-main hover:bg-gray-50 transition-colors">
+          <button 
+            onClick={handleNotificationClick}
+            className="relative flex items-center justify-center size-10 rounded-full bg-white dark:bg-white/10 shadow-sm border border-gray-100 dark:border-gray-700 text-text-main hover:bg-gray-50 transition-colors"
+          >
             <span className="material-symbols-outlined text-[20px] text-purple-main">notifications</span>
             <span className="absolute top-2.5 right-2.5 size-2 bg-primary-light rounded-full border border-white"></span>
           </button>
         </div>
       </header>
 
+      {/* ✅ NUEVO: Toast de Notificación Elegante */}
+      <div
+        className={`absolute top-24 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[340px] transition-all duration-500 transform ${
+          showNotification ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="bg-white dark:bg-[#2d2438] border border-gray-100 dark:border-gray-700 shadow-xl rounded-2xl p-4 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-purple-main">notifications_active</span>
+          </div>
+          <div className="flex flex-col flex-1">
+            <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">¡Todo al día!</h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">No tienes mensajes nuevos.</p>
+          </div>
+          <button onClick={() => setShowNotification(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+            <span className="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto pb-6 scroll-smooth">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pb-6 scroll-smooth">
         {/* Progress Circle */}
         <div className="px-6 pt-2 pb-8 relative text-center">
           <div className="relative w-56 h-56 mx-auto mb-4">
